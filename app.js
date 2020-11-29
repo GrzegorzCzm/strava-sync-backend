@@ -8,6 +8,7 @@ const {
   getNewestActivities,
   accumulateActivities,
   filterActivities,
+  filterActivitiesByDates,
 } = require("./activitiesParser");
 const testData = require("./testData");
 const app = express();
@@ -25,16 +26,16 @@ const accumulationSet = accumulateActivities({
   accumulateFields: ["distance", "movingTime"],
 });
 
-const filteredActivitiesString = filterActivities({
+const filteredActivities = filterActivities({
   activities: newActivities,
   filterField: "type",
-  filterValue: "Run",
+  filterValues: ["Walk", "Run"],
 });
 
-const filteredActivitiesRegex = filterActivities({
+const filteredByDates = filterActivitiesByDates({
   activities: newActivities,
-  filterField: "type",
-  filterValue: /Walk|Run/,
+  startDate: "2020-11-29",
+  endDate: "2020-11-30",
 });
 
 if (!args.token) {
