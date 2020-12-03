@@ -1,24 +1,41 @@
-const parseActivities = (activities) =>
-  activities.map((workout) => ({
-    id: generateId(workout),
-    name: workout.name,
-    athlete: `${workout.athlete.firstname}_${workout.athlete.lastname}`.replace(
-      /\s|\.|-/g,
-      ""
-    ),
-    type: workout.type,
-    distance: workout.distance,
-    movingTime: workout.moving_time,
-    date: Date.now(),
+const {
+  activityTypes,
+  stravaActivityFields,
+  parsedActivityFields,
+} = require("../../src/models/ActivityModel");
+
+const parseActivities = (stravaActivities) =>
+  stravaActivities.map((workout) => ({
+    [parsedActivityFields.ID]: generateId(workout),
+    [parsedActivityFields.NAME]: workout[stravaActivityFields.NAME],
+    [parsedActivityFields.ATHLETE]: `${
+      workout[stravaActivityFields.ATHLETE][
+        stravaActivityFields.ATHLETE_FIELDS.FIRST_NAME
+      ]
+    }_${
+      workout[stravaActivityFields.ATHLETE][
+        stravaActivityFields.ATHLETE_FIELDS.LAST_NAME
+      ]
+    }`.replace(/\s|\.|-/g, ""),
+    [parsedActivityFields.TYPE]: workout[stravaActivityFields.TYPE],
+    [parsedActivityFields.DISTANCE]: workout[stravaActivityFields.DISTANCE],
+    [parsedActivityFields.MOVING_TIME]:
+      workout[stravaActivityFields.MOVING_TIME],
+    [parsedActivityFields.DATE]: Date.now(),
   }));
 
-const generateId = (workout) => `id-${workout.distance}-${workout.moving_time}`;
-const getIdsArray = (activities) => activities.map((activity) => activity.id);
+const generateId = (workout) =>
+  `id-${workout[stravaActivityFields.DISTANCE]}-${
+    workout[stravaActivityFields.MOVING_TIME]
+  }`;
+
+const getIdsArray = (activities) =>
+  activities.map((activity) => activity[parsedActivityFields.ID]);
 
 const getNewestActivities = ({ oldActivities, newActivities }) => {
   const oldIds = getIdsArray(oldActivities);
   const newestActivities = newActivities.filter(
-    (newActivity) => !oldIds.includes(newActivity.id)
+    (newActivity) => !oldIds.includes(newActivity[parsedActivityFields.ID])
   );
   return newestActivities;
 };
@@ -55,7 +72,10 @@ const filterActivitiesByDates = ({ activities, startDate, endDate }) => {
   const unixStartDate = stringDateToUnix(startDate);
   const unixEndDate = stringDateToUnix(endDate);
   return activities.filter((activity) => {
-    return unixStartDate <= activity.date && activity.date <= unixEndDate;
+    return (
+      unixStartDate <= activity[parsedActivityFields.DATE] &&
+      activity[parsedActivityFields.DATE] <= unixEndDate
+    );
   });
 };
 
