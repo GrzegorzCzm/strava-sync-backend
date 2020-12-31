@@ -1,13 +1,25 @@
 var AWS = require("aws-sdk");
 
-const prepareParams = (kvpList) => {
+const { parsedActivityFields } = require("../../src/models/ActivityModel");
+
+const prepareItemParams = (item) => {
   const params = {};
-  kvpList.forEach(
-    (kvp) =>
-      (params[kvp.key] = {
-        [kvp.type]: kvp.val,
-      })
-  );
+
+  for (const [key, value] of Object.entries(item)) {
+    if (
+      key === parsedActivityFields.DISTANCE ||
+      key === parsedActivityFields.MOVING_TIME ||
+      key === parsedActivityFields.DATE
+    ) {
+      params[key] = {
+        N: `${value}`,
+      };
+    } else {
+      params[key] = {
+        S: value,
+      };
+    }
+  }
   return params;
 };
 
@@ -77,17 +89,32 @@ class AwsService {
     });
   }
 
-  /*
-   * @param {Object} item - { key: "keyName", val: "someValue", type: "S" },
-   */
   putDynamoDbItem(tableName, item) {
     const params = {
-      Item: prepareParams(item),
+      Item: prepareItemParams(item),
       ReturnConsumedCapacity: "TOTAL",
       TableName: tableName,
     };
 
     this.dynamodb.putItem(params, (err, data) => {
+      if (err) console.log(err, err.stack);
+      else console.log(data);
+    });
+  }
+
+  putDynamoDbBatchItems(tableName, items) {
+    const parsedItemsToAdd = items.map((item) => ({
+      PutRequest: {
+        Item: prepareItemParams(item),
+      },
+    }));
+
+    const params = {
+      RequestItems: {
+        [tableName]: parsedItemsToAdd,
+      },
+    };
+    this.dynamodb.batchWriteItem(params, function (err, data) {
       if (err) console.log(err, err.stack);
       else console.log(data);
     });

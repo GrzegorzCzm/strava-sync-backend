@@ -11,16 +11,19 @@ const args = minimist(process.argv.slice(2));
 
 const awsService = new AwsService();
 
-if (!args.token) {
+const stravaToken = args.token || process.env.STRAVA_TOKEN;
+const stravaClubId = args.clubId || process.env.STRAVA_CLUB_ID;
+
+if (!stravaToken) {
   killApp({ exitCode: 9, consoleLog: "Missing --token param" });
 }
 
-if (!args.clubId) {
+if (!stravaClubId) {
   killApp({ exitCode: 9, consoleLog: "Missing --clubId param" });
 }
 
-const stravaService = new StravaService(args.token);
-stravaService.clubId = args.clubId;
+const stravaService = new StravaService(stravaToken);
+stravaService.clubId = stravaClubId;
 
 app.get("/", (req, res) => {
   res.send(`Hi!`);
