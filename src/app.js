@@ -1,11 +1,15 @@
+require("dotenv").config();
+
 const express = require("express");
 const minimist = require("minimist");
-
+const AwsService = require("./services/AwsService");
 const StravaService = require("./services/StravaService");
 const { killApp, handleError } = require("./utils/appErrorHandler");
 const app = express();
 
 const args = minimist(process.argv.slice(2));
+
+const awsService = new AwsService();
 
 if (!args.token) {
   killApp({ exitCode: 9, consoleLog: "Missing --token param" });
