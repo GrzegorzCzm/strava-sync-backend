@@ -9,21 +9,25 @@ const app = express();
 
 const args = minimist(process.argv.slice(2));
 
+const logToConsole = (text) => console.log(text);
+
 const awsService = new AwsService();
 
-const stravaToken = args.token || process.env.STRAVA_TOKEN;
+const stravaRefreshToken =
+  args.refreshToken || process.env.STRAVA_REFRESH_TOKEN;
 const stravaClubId = args.clubId || process.env.STRAVA_CLUB_ID;
 
-if (!stravaToken) {
-  killApp({ exitCode: 9, consoleLog: "Missing --token param" });
+if (!stravaRefreshToken) {
+  killApp({ exitCode: 9, consoleLog: "Missing --refreshToken param" });
 }
 
 if (!stravaClubId) {
   killApp({ exitCode: 9, consoleLog: "Missing --clubId param" });
 }
 
-const stravaService = new StravaService(stravaToken);
+const stravaService = new StravaService(stravaRefreshToken, logToConsole);
 stravaService.clubId = stravaClubId;
+stravaService.refreshTokens();
 
 app.get("/", (req, res) => {
   res.send(`Hi!`);
@@ -31,9 +35,8 @@ app.get("/", (req, res) => {
 
 app.get("/club-activities", (req, res) => {
   stravaService
-    .callGet(stravaService.getClubActivities())
+    .getClubActivities()
     .then((stravaRes) => {
-      console.log(stravaRes.data);
       res.send(stravaRes.data);
     })
     .catch((error) => {
@@ -47,9 +50,8 @@ app.get("/club-activities", (req, res) => {
 
 app.get("/club-members", (req, res) => {
   stravaService
-    .callGet(stravaService.getClubMembers())
+    .getClubMembers()
     .then((stravaRes) => {
-      console.log(stravaRes.data);
       res.send(stravaRes.data);
     })
     .catch((error) => {
