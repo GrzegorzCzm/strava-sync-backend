@@ -1,10 +1,8 @@
-const killApp = ({ exitCode = 0, consoleLog = "Oppsss.." }) => {
-  console.error(consoleLog);
+const killApp = ({ exitCode = 0 }) => {
   process.exit(exitCode);
 };
 
 const handleError = ({ responseStatus, message, response }) => {
-  console.error(message);
   if (responseStatus === 401) {
     killApp({ exitCode: 0 });
   }

@@ -8,8 +8,8 @@ class StravaService {
   clubId = "";
   refreshToken = "";
   accessToken = "";
-  constructor(stravaRefreshToken, logToConsole) {
-    this.logToConsole = logToConsole;
+  constructor(stravaRefreshToken, logger) {
+    this.logger = logger;
     this.refreshToken = stravaRefreshToken;
     this.axiosInstance = axios.create({
       baseURL: STRAVA_BASE_URL,
@@ -64,7 +64,7 @@ class StravaService {
         return;
       })
       .catch((error) => {
-        console.error(error);
+        this.logger.error(error);
         return;
       });
   }
