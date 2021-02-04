@@ -4,8 +4,11 @@ const {
   parsedActivityFields,
 } = require("../../src/models/ActivityModel");
 
-const parseActivities = (stravaActivities) =>
-  stravaActivities.map((workout) => ({
+const parseStravaActivities = (stravaActivities) => {
+  const currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  const currentTimestamp = currentDate.getTime();
+  return stravaActivities.map((workout) => ({
     [parsedActivityFields.ID]: generateId(workout),
     [parsedActivityFields.NAME]: workout[stravaActivityFields.NAME],
     [parsedActivityFields.ATHLETE]: `${
@@ -21,8 +24,9 @@ const parseActivities = (stravaActivities) =>
     [parsedActivityFields.DISTANCE]: workout[stravaActivityFields.DISTANCE],
     [parsedActivityFields.MOVING_TIME]:
       workout[stravaActivityFields.MOVING_TIME],
-    [parsedActivityFields.DATE]: Date.now(),
+    [parsedActivityFields.DATE]: currentTimestamp,
   }));
+};
 
 const generateId = (workout) =>
   `id-${workout[stravaActivityFields.DISTANCE]}-${
@@ -85,7 +89,19 @@ const filterActivities = ({ activities, filterField, filterValues }) => {
   );
 };
 
-exports.parseActivities = parseActivities;
+const parseDynamodDbActivities = (dynamoDbActivities) => {
+  const parsedActivities = dynamoDbActivities.map((ddbActivity) => {
+    const activity = {};
+    for (const [key, value] of Object.entries(ddbActivity)) {
+      activity[key] = value.S || Number(value.N);
+    }
+    return activity;
+  });
+  return parsedActivities;
+};
+
+exports.parseStravaActivities = parseStravaActivities;
+exports.parseDynamodDbActivities = parseDynamodDbActivities;
 exports.getNewestActivities = getNewestActivities;
 exports.accumulateActivities = accumulateActivities;
 exports.filterActivities = filterActivities;

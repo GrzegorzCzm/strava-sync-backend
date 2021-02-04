@@ -27,7 +27,7 @@ class StravaService {
   }
 
   getClubActivities(clubId = this.clubId) {
-    return this.callGet(`clubs/${clubId}/activities`);
+    return this.callGet(`clubs/${clubId}/activities?per_page=25`);
   }
 
   async callGet(path) {
