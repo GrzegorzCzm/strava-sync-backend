@@ -1,8 +1,8 @@
-const AWS = require("aws-sdk");
+import { Service, Inject } from 'typedi';
 
-const { parsedActivityFields } = require("../../src/models/ActivityModel");
+import { parsedActivityFields } from '../models/ActivityModel';
 
-const prepareItemParams = (item) => {
+const prepareItemParams = item => {
   const params = {};
 
   for (const [key, value] of Object.entries(item)) {
@@ -23,69 +23,64 @@ const prepareItemParams = (item) => {
   return params;
 };
 
-const prepareFilterForScan = (filter) => ({
+const prepareFilterForScan = filter => ({
   ExpressionAttributeValues: {
-    ":a": {
+    ':a': {
       [filter.type]: filter.val,
     },
   },
   FilterExpression: `${filter.key} = :a`,
 });
 
-class AwsService {
-  constructor(logger) {
-    this.logger = logger;
-    this.dynamodb = new AWS.DynamoDB({
-      apiVersion: "2012-08-10",
-      region: "eu-central-1",
-    });
-  }
+@Service()
+export default class DynamoDbService {
+  constructor(@Inject('logger') private logger, @Inject('dynamoDb') private dynamoDb) {}
 
   getDynamoDbTableList(callback) {
-    this.dynamodb.listTables({}, callback);
+    this.dynamoDb.listTables({}, callback);
   }
 
   getDynamoDbTableDescription(tableName, callback) {
     const params = { TableName: tableName };
 
-    this.dynamodb.describeTable(params, callback);
+    this.dynamoDb.describeTable(params, callback);
   }
 
   getActivitiesFromDateRange(tableName, from, to, callback) {
     const params = {
       ExpressionAttributeValues: {
-        ":from": {
+        ':from': {
           N: from,
         },
-        ":to": {
+        ':to': {
           N: to,
         },
       },
-      FilterExpression: "#date between :from and :to",
+      FilterExpression: '#date between :from and :to',
       ExpressionAttributeNames: {
-        "#date": "date",
+        '#date': 'date',
       },
       TableName: tableName,
     };
 
-    this.dynamodb.scan(params, callback);
+    this.dynamoDb.scan(params, callback);
   }
 
   getActivitiesFromGivenDay(tableName, date, callback) {
     const params = {
       ExpressionAttributeValues: {
-        ":date": {
+        ':date': {
           N: date,
         },
       },
-      KeyConditionExpression: "#date = :date",
+      KeyConditionExpression: '#date = :date',
       ExpressionAttributeNames: {
-        "#date": "date",
+        '#date': 'date',
       },
       TableName: tableName,
     };
 
-    this.dynamodb.query(params, callback);
+    this.dynamoDb.query(params, callback);
   }
 
   /*
@@ -99,30 +94,30 @@ class AwsService {
       params = { ...params, ...prepareFilterForScan(filter) };
     }
 
-    this.dynamodb.scan(params, callback);
+    this.dynamoDb.scan(params, callback);
   }
 
   getDynamoDbItem(tableName, keysAndVales, callback) {
     const params = { Key: {}, TableName: tableName };
-    keysAndVales.forEach((kvp) => {
+    keysAndVales.forEach(kvp => {
       params.Key[kvp.key] = { S: kvp.val };
     });
 
-    this.dynamodb.getItem(params, callback);
+    this.dynamoDb.getItem(params, callback);
   }
 
   putDynamoDbItem(tableName, item, callback) {
     const params = {
       Item: prepareItemParams(item),
-      ReturnConsumedCapacity: "TOTAL",
+      ReturnConsumedCapacity: 'TOTAL',
       TableName: tableName,
     };
 
-    this.dynamodb.putItem(params, callback);
+    this.dynamoDb.putItem(params, callback);
   }
 
   putDynamoDbBatchItems(tableName, items, callback) {
-    const parsedItemsToAdd = items.map((item) => ({
+    const parsedItemsToAdd = items.map(item => ({
       PutRequest: {
         Item: prepareItemParams(item),
       },
@@ -133,7 +128,6 @@ class AwsService {
         [tableName]: parsedItemsToAdd,
       },
     };
-    this.dynamodb.batchWriteItem(params, callback);
+    this.dynamoDb.batchWriteItem(params, callback);
   }
 }
-module.exports = AwsService;
