@@ -6,32 +6,28 @@ import StravaService from '../../services/stravaService';
 
 const route = Router();
 
-export default (app: Router) => {
+export default (app: Router): void => {
   app.use('/club', route);
 
-  route.get('/members', (req, res) => {
+  route.get('/members', async (req, res) => {
     const stravaServiceInstance = Container.get(StravaService);
     const logger: Logger = Container.get('logger');
-    stravaServiceInstance
-      .getClubMembers()
-      .then(stravaRes => {
-        res.send(stravaRes.data);
-      })
-      .catch(error => {
-        logger.error(error.message);
-      });
+    try {
+      const stravaRes = await stravaServiceInstance.getClubMembers();
+      res.send(stravaRes.data);
+    } catch (error) {
+      logger.error(error?.message);
+    }
   });
 
-  route.get('/activities', (req, res) => {
+  route.get('/lastactivities', async (req, res) => {
     const stravaServiceInstance = Container.get(StravaService);
     const logger: Logger = Container.get('logger');
-    stravaServiceInstance
-      .getClubActivities()
-      .then(stravaRes => {
-        res.send(stravaRes.data);
-      })
-      .catch(error => {
-        logger.error(error.message);
-      });
+    try {
+      const stravaRes = await stravaServiceInstance.getClubActivities();
+      res.send(stravaRes.data);
+    } catch (error) {
+      logger.error(error?.message);
+    }
   });
 };

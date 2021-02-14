@@ -14,8 +14,8 @@ async function startServer() {
   await require('./loaders').default({ expressApp: app });
 
   app
-    .listen(config.port, () => {
-      Logger.info(`Server listening on port: ${config.port}`);
+    .listen(config.server.PORT, () => {
+      Logger.info(`Server listening on port: ${config.server.PORT}`);
     })
     .on('error', err => {
       Logger.error(err);
@@ -43,8 +43,8 @@ startServer();
 
 //       awsService.getActivitiesFromDateRange(
 //         'stravaTestTwo',
-//         `${currentTimestampsMinusYear}`,
-//         `${currentTimestamp}`,
+//         currentTimestampsMinusYear,
+//         currentTimestamp,
 //         (err, data) => {
 //           if (err) Logger.info(JSON.stringify(err) + JSON.stringify(err.stack));
 //           else {

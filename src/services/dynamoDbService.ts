@@ -1,9 +1,41 @@
 import { Service, Inject } from 'typedi';
 import { Logger } from 'winston';
+import {
+  DynamoDB,
+  DescribeTableOutput,
+  ListTablesCommandOutput,
+  ScanCommandOutput,
+  QueryCommandOutput,
+  GetItemCommandOutput,
+  PutItemCommandOutput,
+  BatchWriteItemCommandOutput,
+} from '@aws-sdk/client-dynamodb';
 
 import { parsedActivityFields } from '../models/ActivityModel';
 
-const prepareItemParams = item => {
+interface ScanFilter {
+  key: string;
+  val: string;
+  type: 'S' | 'N';
+}
+
+interface KVP {
+  key: string;
+  val: string;
+}
+
+type ActivityType = 'Run' | 'Ride' | 'Walk' | 'VirtualRide';
+interface ActivityItem {
+  id: string;
+  name: string;
+  athlete: string;
+  type: ActivityType;
+  distance: number;
+  movingTime: number;
+  date: number;
+}
+
+const prepareItemParams = (item: ActivityItem) => {
   const params = {};
 
   for (const [key, value] of Object.entries(item)) {
@@ -24,7 +56,7 @@ const prepareItemParams = item => {
   return params;
 };
 
-const prepareFilterForScan = filter => ({
+const prepareFilterForScan = (filter: ScanFilter) => ({
   ExpressionAttributeValues: {
     ':a': {
       [filter.type]: filter.val,
@@ -35,26 +67,33 @@ const prepareFilterForScan = filter => ({
 
 @Service()
 export default class DynamoDbService {
-  constructor(@Inject('logger') private logger: Logger, @Inject('dynamoDb') private dynamoDb) {}
+  constructor(
+    @Inject('logger') private logger: Logger,
+    @Inject('dynamoDb') private dynamoDb: DynamoDB,
+  ) {}
 
-  getDynamoDbTableList(callback) {
-    this.dynamoDb.listTables({}, callback);
+  async getDynamoDbTableList(): Promise<ListTablesCommandOutput> {
+    return await this.dynamoDb.listTables({});
   }
 
-  getDynamoDbTableDescription(tableName, callback) {
+  async getDynamoDbTableDescription(tableName: string): Promise<DescribeTableOutput> {
     const params = { TableName: tableName };
 
-    this.dynamoDb.describeTable(params, callback);
+    return await this.dynamoDb.describeTable(params);
   }
 
-  getActivitiesFromDateRange(tableName, from, to, callback) {
+  async getActivitiesFromDateRange(
+    tableName: string,
+    from: number,
+    to: number,
+  ): Promise<ScanCommandOutput> {
     const params = {
       ExpressionAttributeValues: {
         ':from': {
-          N: from,
+          N: `${from}`,
         },
         ':to': {
-          N: to,
+          N: `${to}`,
         },
       },
       FilterExpression: '#date between :from and :to',
@@ -64,14 +103,14 @@ export default class DynamoDbService {
       TableName: tableName,
     };
 
-    this.dynamoDb.scan(params, callback);
+    return await this.dynamoDb.scan(params);
   }
 
-  getActivitiesFromGivenDay(tableName, date, callback) {
+  async getActivitiesFromGivenDay(tableName: string, date: number): Promise<QueryCommandOutput> {
     const params = {
       ExpressionAttributeValues: {
         ':date': {
-          N: date,
+          N: `${date}`,
         },
       },
       KeyConditionExpression: '#date = :date',
@@ -81,13 +120,10 @@ export default class DynamoDbService {
       TableName: tableName,
     };
 
-    this.dynamoDb.query(params, callback);
+    return await this.dynamoDb.query(params);
   }
 
-  /*
-   * @param {Object} filter - { key: "keyName", val: "someValue", type: "S" },
-   */
-  getDynamoDbTableScan(tableName, filter, callback) {
+  async getDynamoDbTableScan(tableName: string, filter: ScanFilter): Promise<QueryCommandOutput> {
     let params = {
       TableName: tableName,
     };
@@ -95,30 +131,33 @@ export default class DynamoDbService {
       params = { ...params, ...prepareFilterForScan(filter) };
     }
 
-    this.dynamoDb.scan(params, callback);
+    return await this.dynamoDb.scan(params);
   }
 
-  getDynamoDbItem(tableName, keysAndVales, callback) {
+  async getDynamoDbItem(tableName: string, keysAndVales: KVP[]): Promise<GetItemCommandOutput> {
     const params = { Key: {}, TableName: tableName };
-    keysAndVales.forEach(kvp => {
+    keysAndVales.forEach((kvp: KVP) => {
       params.Key[kvp.key] = { S: kvp.val };
     });
 
-    this.dynamoDb.getItem(params, callback);
+    return await this.dynamoDb.getItem(params);
   }
 
-  putDynamoDbItem(tableName, item, callback) {
+  async putDynamoDbItem(tableName: string, item: ActivityItem): Promise<PutItemCommandOutput> {
     const params = {
       Item: prepareItemParams(item),
       ReturnConsumedCapacity: 'TOTAL',
       TableName: tableName,
     };
 
-    this.dynamoDb.putItem(params, callback);
+    return await this.dynamoDb.putItem(params);
   }
 
-  putDynamoDbBatchItems(tableName, items, callback) {
-    const parsedItemsToAdd = items.map(item => ({
+  async putDynamoDbBatchItems(
+    tableName: string,
+    items: ActivityItem[],
+  ): Promise<BatchWriteItemCommandOutput> {
+    const parsedItemsToAdd = items.map((item: ActivityItem) => ({
       PutRequest: {
         Item: prepareItemParams(item),
       },
@@ -129,6 +168,6 @@ export default class DynamoDbService {
         [tableName]: parsedItemsToAdd,
       },
     };
-    this.dynamoDb.batchWriteItem(params, callback);
+    return await this.dynamoDb.batchWriteItem(params);
   }
 }

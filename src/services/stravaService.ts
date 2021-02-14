@@ -5,7 +5,7 @@ import { Logger } from 'winston';
 export default class StravaService {
   clubId = '';
   constructor(@Inject('logger') private logger: Logger, @Inject('strava') private strava: any) {
-    this.clubId = process.env.STRAVA_CLUB_ID; //TODO
+    this.clubId = process.env.STRAVA_CLUB_ID;
   }
 
   private validateTokens = async () => {
