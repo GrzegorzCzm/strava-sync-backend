@@ -3,14 +3,19 @@ import { Logger } from 'winston';
 
 @Service()
 export default class StravaService {
-  refreshToken = '';
-  accessToken = '';
   clubId = '';
-  tokenExpirationDate;
-  constructor(@Inject('logger') private logger: Logger, @Inject('strava') private strava) {
-    this.refreshToken = process.env.STRAVA_REFRESH_TOKEN; //TODO
+  constructor(@Inject('logger') private logger: Logger, @Inject('strava') private strava: any) {
     this.clubId = process.env.STRAVA_CLUB_ID; //TODO
   }
+
+  private validateTokens = async () => {
+    const isTokenExpired = this.strava.tokenExpirationDate > Date.now();
+    if (isTokenExpired) {
+      const newTokensData = await this.strava.getNewTokens(this.strava.refreshToken);
+      this.strava.tokensData = newTokensData;
+      this.strava.axios.defaults.headers.Authorization = `Bearer ${newTokensData.accessToken}`;
+    }
+  };
 
   getClubMembers(clubId = this.clubId) {
     return this.callGet(`clubs/${clubId}/members`);
@@ -21,44 +26,14 @@ export default class StravaService {
   }
 
   async callGet(path) {
-    // const isTokenExpired = this.tokenExpirationDate > Date.now();
-    // if (isTokenExpired) {
-    // await this.refreshTokens();
-    // }
+    await this.validateTokens();
     this.logger.info(`GET API call to ${path}`);
-    return this.strava.get(path);
+    return this.strava.axios.get(path);
   }
 
   async callPost(path, params) {
-    // const isTokenExpired = this.tokenExpirationDate < Date.now();
-    // if (isTokenExpired) {
-    // await this.refreshTokens();
-    // }
+    await this.validateTokens();
     this.logger.info(`POST API call to ${path} with params ${JSON.stringify(params)}`);
-    return this.strava.post(path, params);
+    return this.strava.axios.post(path, params);
   }
-
-  // refreshTokens() {
-  //   //TODO
-  //   return axios
-  //     .post(STRAVA_ACCESS_TOKENS, {
-  //       client_id: process.env.STRAVA_CLIENT_ID,
-  //       client_secret: process.env.STRAVA_CLIENT_SECRET,
-  //       grant_type: 'refresh_token',
-  //       refresh_token: this.refreshToken,
-  //     })
-  //     .then(response => {
-  //       const { access_token, refresh_token, expires_at } = response.data;
-  //       this.accessToken = access_token;
-  //       this.refreshToken = refresh_token;
-  //       this.tokenExpirationDate = new Date(expires_at);
-
-  //       this.strava.defaults.headers.Authorization = `Bearer ${this.accessToken}`;
-  //       return;
-  //     })
-  //     .catch(error => {
-  //       this.logger.error(error);
-  //       return;
-  //     });
-  // }
 }

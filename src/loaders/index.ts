@@ -6,7 +6,7 @@ import logger from './logger';
 
 export default async ({ expressApp }) => {
   const dynamoDbConnection = dynamoDb();
-  const stravaConnection = strava();
+  const stravaConnection = await strava();
 
   await dependencyInjectorLoader({
     dynamoDbConnection,

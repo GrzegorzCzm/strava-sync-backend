@@ -1,4 +1,5 @@
 import { Service, Inject } from 'typedi';
+import { Logger } from 'winston';
 
 import { parsedActivityFields } from '../models/ActivityModel';
 
@@ -34,7 +35,7 @@ const prepareFilterForScan = filter => ({
 
 @Service()
 export default class DynamoDbService {
-  constructor(@Inject('logger') private logger, @Inject('dynamoDb') private dynamoDb) {}
+  constructor(@Inject('logger') private logger: Logger, @Inject('dynamoDb') private dynamoDb) {}
 
   getDynamoDbTableList(callback) {
     this.dynamoDb.listTables({}, callback);
