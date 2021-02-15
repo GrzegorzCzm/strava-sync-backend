@@ -1,22 +1,11 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import logger from './logger';
 
 import config from '../config';
 
 const TIMEOUT = 10000;
 
-interface TokensData {
-  accessToken: string;
-  refreshToken: string;
-  tokenExpirationDate: Date;
-}
-interface StravaData {
-  axios: AxiosInstance;
-  tokensData: TokensData;
-  getNewTokens: (refreshToken: string) => Promise<TokensData>;
-}
-
-export default async (): Promise<StravaData> => {
+export default async (): Promise<Models.Strava> => {
   const tokensData = await getRefreshedTokens(process.env.STRAVA_REFRESH_TOKEN);
   return {
     axios: axios.create({
@@ -29,11 +18,11 @@ export default async (): Promise<StravaData> => {
   };
 };
 
-const getNewTokens = async (refreshToken: string): Promise<TokensData> => {
+const getNewTokens = async (refreshToken: string): Promise<Models.StravaTokens> => {
   return await getRefreshedTokens(refreshToken);
 };
 
-const getRefreshedTokens = async (refreshToken: string): Promise<TokensData> => {
+const getRefreshedTokens = async (refreshToken: string): Promise<Models.StravaTokens> => {
   try {
     const result = await axios.post(config.urls.STRAVA_TOKENS_URL, {
       client_id: process.env.STRAVA_CLIENT_ID,
@@ -45,7 +34,7 @@ const getRefreshedTokens = async (refreshToken: string): Promise<TokensData> => 
     return {
       accessToken: access_token,
       refreshToken: refresh_token,
-      tokenExpirationDate: new Date(expires_at),
+      tokenExpirationDate: new Date(expires_at).getTime(),
     };
   } catch (error) {
     logger.error(error?.message);

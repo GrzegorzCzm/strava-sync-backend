@@ -1,10 +1,12 @@
+import { Express } from 'express';
+
+import logger from './logger';
 import expressLoader from './express';
 import dynamoDb from './dynamoDb';
 import strava from './strava';
 import dependencyInjectorLoader from './dependencyInjector';
-import logger from './logger';
 
-export default async ({ expressApp }) => {
+export default async ({ expressApp }: { expressApp: Express }): Promise<void> => {
   const dynamoDbConnection = dynamoDb();
   const stravaConnection = await strava();
 
@@ -13,7 +15,7 @@ export default async ({ expressApp }) => {
     stravaConnection,
     logger,
     models: [
-      //some models here
+      //TODO some models here
     ],
   });
   logger.info('Dependency Injector loaded');

@@ -2,6 +2,7 @@ import { Container } from 'typedi';
 
 interface Model {
   name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   model: any;
 }
 
