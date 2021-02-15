@@ -19,6 +19,8 @@ interface StravaClubMemberData {
 
 export type StravaClubMembersData = StravaClubMemberData[];
 
+export type ActivityType = 'Ride' | 'Run' | 'Walk' | 'VirtualRide';
+
 interface StravaClubActivityData {
   athlete: StravaClubMemberData;
   name: string;
@@ -26,7 +28,17 @@ interface StravaClubActivityData {
   moving_time: number;
   elapsed_time: number;
   total_elevation_gain: number;
-  type: string;
+  type: ActivityType;
 }
 
 export type StravaClubActivitiesData = StravaClubActivityData[];
+
+export interface ProccessedActivity {
+  id: string;
+  name: string;
+  athlete: string;
+  type: ActivityType;
+  distance: number;
+  movingTime: number;
+  date: number;
+}
