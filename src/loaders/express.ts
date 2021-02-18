@@ -1,7 +1,7 @@
 import * as express from 'express';
 import cors from 'cors';
 
-import routes from '../api';
+import routes from '../routes';
 
 export default async ({ app }: { app: express.Application }): Promise<express.Application> => {
   app.get('/status', (req, res) => {

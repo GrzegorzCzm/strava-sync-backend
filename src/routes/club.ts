@@ -1,15 +1,15 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { Container } from 'typedi';
 import { Logger } from 'winston';
 
-import StravaService from '../../services/stravaService';
+import StravaService from '../services/stravaService';
 
 const route = Router();
 
 export default (app: Router): void => {
   app.use('/club', route);
 
-  route.get('/members', async (req, res) => {
+  route.get('/members', async (req: Request, res: Response) => {
     const stravaServiceInstance = Container.get(StravaService);
     const logger: Logger = Container.get('logger');
     try {
@@ -20,7 +20,7 @@ export default (app: Router): void => {
     }
   });
 
-  route.get('/lastactivities', async (req, res) => {
+  route.get('/lastactivities', async (req: Request, res: Response) => {
     const stravaServiceInstance = Container.get(StravaService);
     const logger: Logger = Container.get('logger');
     try {

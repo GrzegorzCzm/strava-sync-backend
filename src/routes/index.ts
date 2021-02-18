@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import club from './routes/club';
+import club from './club';
 
 export default (): Router => {
   const app = Router();

@@ -21,7 +21,7 @@ export type StravaClubMembersData = StravaClubMemberData[];
 
 export type ActivityType = 'Ride' | 'Run' | 'Walk' | 'VirtualRide';
 
-interface StravaClubActivityData {
+export interface StravaClubActivityData {
   athlete: StravaClubMemberData;
   name: string;
   distance: number;
