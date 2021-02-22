@@ -12,7 +12,7 @@ export interface StravaData {
   getNewTokens: (refreshToken: string) => Promise<StravaTokensData>;
 }
 
-interface StravaClubMemberData {
+export interface StravaClubMemberData {
   firstname: string;
   lastname: string;
 }

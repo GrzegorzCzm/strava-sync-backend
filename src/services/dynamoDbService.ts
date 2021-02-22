@@ -11,8 +11,6 @@ import {
   BatchWriteItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 
-import { parsedActivityFields } from '../models/ActivityModel';
-
 interface ScanFilter {
   key: string;
   val: string;
@@ -39,11 +37,7 @@ const prepareItemParams = (item: ActivityItem) => {
   const params = {};
 
   for (const [key, value] of Object.entries(item)) {
-    if (
-      key === parsedActivityFields.DISTANCE ||
-      key === parsedActivityFields.MOVING_TIME ||
-      key === parsedActivityFields.DATE
-    ) {
+    if (typeof value === 'number') {
       params[key] = {
         N: `${value}`,
       };
