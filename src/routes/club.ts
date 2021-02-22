@@ -20,11 +20,12 @@ export default (app: Router): void => {
     }
   });
 
-  route.get('/lastactivities', async (req: Request, res: Response) => {
+  // Query e.g. http://localhost:3000/club/activities?keyA=valA
+  route.get('/activities', async (req: Request, res: Response) => {
     const clubCotrollerInstance = Container.get(ClubController);
     const logger: Logger = Container.get('logger');
     try {
-      const clubActivities = await clubCotrollerInstance.getClubActivities();
+      const clubActivities = await clubCotrollerInstance.getClubActivities(req.query);
       res.send(clubActivities);
     } catch (error) {
       logger.error(error?.message);

@@ -57,12 +57,22 @@ export default class ClubController {
 
   async getClubMembers(): Promise<any> {
     const stravaRes = await this.stravaServiceInstance.getClubMembers();
-    return this.parseMembers(stravaRes.data);
+    return this.parseMembers(stravaRes.data as StravaClubMemberData[]);
   }
 
-  async getClubActivities(): Promise<any> {
-    const stravaRes = await this.stravaServiceInstance.getClubActivities();
-    return this.parseStravaActivities(stravaRes.data);
+  async getClubActivities(query: any): Promise<any> {
+    const filter = this.prepareDynamoDbFilter(query);
+    const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
+      process.env.DYNAMO_DB_ACTIVITIES_TABLE_NAME,
+      filter,
+    );
+    return this.parseDynamodDbActivities(dynamoDbRes.Items);
+  }
+
+  private prepareDynamoDbFilter(query): any {
+    for (const [key, val] of Object.entries(query)) {
+      return { key, val, valType: 'S' };
+    }
   }
 
   private parseMembers(stravaClubMembers: StravaClubMemberData[]): string[] {

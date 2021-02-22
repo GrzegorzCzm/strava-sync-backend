@@ -21,6 +21,7 @@ export default class StravaService {
     }
   };
 
+  // TODO - Models.StravaClubMembers is not the correct one
   getClubMembers(clubId = this.clubId): Promise<AxiosResponse<Models.StravaClubMembers>> {
     return this.callGet(`clubs/${clubId}/members`);
   }

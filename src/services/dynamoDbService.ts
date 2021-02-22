@@ -14,7 +14,7 @@ import {
 interface ScanFilter {
   key: string;
   val: string;
-  type: 'S' | 'N';
+  valType: 'S' | 'N';
 }
 
 interface KVP {
@@ -51,12 +51,15 @@ const prepareItemParams = (item: ActivityItem) => {
 };
 
 const prepareFilterForScan = (filter: ScanFilter) => ({
+  ExpressionAttributeNames: {
+    '#key': filter.key,
+  },
   ExpressionAttributeValues: {
-    ':a': {
-      [filter.type]: filter.val,
+    ':valObj': {
+      [filter.valType]: filter.val,
     },
   },
-  FilterExpression: `${filter.key} = :a`,
+  FilterExpression: `#key = :valObj`,
 });
 
 @Service()
