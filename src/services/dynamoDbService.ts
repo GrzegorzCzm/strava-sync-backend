@@ -50,17 +50,20 @@ const prepareItemParams = (item: ActivityItem) => {
   return params;
 };
 
-const prepareFilterForScan = (filter: ScanFilter) => ({
-  ExpressionAttributeNames: {
-    '#key': filter.key,
-  },
-  ExpressionAttributeValues: {
-    ':valObj': {
-      [filter.valType]: filter.val,
-    },
-  },
-  FilterExpression: `#key = :valObj`,
-});
+const prepareFilterForScan = (filtersArray: ScanFilter[]) => {
+  const filtersForScan = {
+    ExpressionAttributeNames: {},
+    ExpressionAttributeValues: {},
+    FilterExpression: ``,
+  };
+  filtersArray.forEach((filter: ScanFilter, index) => {
+    filtersForScan.ExpressionAttributeNames[`#key${index}`] = filter.key;
+    filtersForScan.ExpressionAttributeValues[`:val${index}`] = { [filter.valType]: filter.val };
+    filtersForScan.FilterExpression +=
+      (filtersForScan.FilterExpression ? ' AND ' : '') + `#key${index} = :val${index}`;
+  });
+  return filtersForScan;
+};
 
 @Service()
 export default class DynamoDbService {
@@ -120,12 +123,15 @@ export default class DynamoDbService {
     return await this.dynamoDb.query(params);
   }
 
-  async getDynamoDbTableScan(tableName: string, filter: ScanFilter): Promise<QueryCommandOutput> {
+  async getDynamoDbTableScan(
+    tableName: string,
+    filtersArray: ScanFilter[],
+  ): Promise<QueryCommandOutput> {
     let params = {
       TableName: tableName,
     };
-    if (filter) {
-      params = { ...params, ...prepareFilterForScan(filter) };
+    if (filtersArray) {
+      params = { ...params, ...prepareFilterForScan(filtersArray) };
     }
 
     return await this.dynamoDb.scan(params);

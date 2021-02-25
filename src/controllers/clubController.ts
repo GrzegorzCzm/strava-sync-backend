@@ -1,12 +1,12 @@
 import { Inject, Container, Service } from 'typedi';
-
 import { Logger } from 'winston';
+
 import {
   StravaClubActivityData,
   ProccessedActivity,
   StravaClubMemberData,
 } from '../interfaces/IStrava';
-import { DynamoDbClubActivityData } from '../interfaces/IDynamoDb';
+import { DynamoDbClubActivityData, FilterForDynamoDbTableScan } from '../interfaces/IDynamoDb';
 
 import StravaService from '../services/stravaService';
 import DynamoDbService from '../services/dynamoDbService';
@@ -55,24 +55,27 @@ export default class ClubController {
     this.dynamoDbServiceInstance = Container.get(DynamoDbService);
   }
 
-  async getClubMembers(): Promise<any> {
+  async getClubMembers(): Promise<string[]> {
     const stravaRes = await this.stravaServiceInstance.getClubMembers();
     return this.parseMembers(stravaRes.data as StravaClubMemberData[]);
   }
 
-  async getClubActivities(query: any): Promise<any> {
-    const filter = this.prepareDynamoDbFilter(query);
+  async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
+    const filtersArray = this.prepareDynamoDbFilter(query);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
       process.env.DYNAMO_DB_ACTIVITIES_TABLE_NAME,
-      filter,
+      filtersArray,
     );
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
 
-  private prepareDynamoDbFilter(query): any {
+  private prepareDynamoDbFilter(query: unknown): FilterForDynamoDbTableScan[] {
+    const filtersArray: FilterForDynamoDbTableScan[] = [];
     for (const [key, val] of Object.entries(query)) {
-      return { key, val, valType: 'S' };
+      const parsedValueToNumber = Number(val);
+      filtersArray.push({ key, val, valType: isNaN(parsedValueToNumber) ? 'S' : 'N' });
     }
+    return filtersArray;
   }
 
   private parseMembers(stravaClubMembers: StravaClubMemberData[]): string[] {
@@ -154,6 +157,7 @@ export default class ClubController {
     dynamoDbActivities: DynamoDbClubActivityData[],
   ): ProccessedActivity[] {
     const parsedActivities = dynamoDbActivities.map(ddbActivity => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const activity: any = {};
       for (const [key, value] of Object.entries(ddbActivity)) {
         activity[key] = value.S || Number(value.N);
