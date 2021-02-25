@@ -69,6 +69,12 @@ export default class ClubController {
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
 
+  async syncActivities(): Promise<void> {
+    console.log('SYNCING');
+    const stravaActivities = await this.stravaServiceInstance.getClubActivities();
+    this.logger.info(`Got ${stravaActivities.data.length} activities from Strava`);
+  }
+
   private prepareDynamoDbFilter(query: unknown): FilterForDynamoDbTableScan[] {
     const filtersArray: FilterForDynamoDbTableScan[] = [];
     for (const [key, val] of Object.entries(query)) {

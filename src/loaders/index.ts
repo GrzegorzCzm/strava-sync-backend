@@ -4,6 +4,7 @@ import logger from './logger';
 import expressLoader from './express';
 import dynamoDb from './dynamoDb';
 import strava from './strava';
+import jobsLoader from './jobs';
 import dependencyInjectorLoader from './dependencyInjector';
 
 export default async ({ expressApp }: { expressApp: Express }): Promise<void> => {
@@ -14,11 +15,11 @@ export default async ({ expressApp }: { expressApp: Express }): Promise<void> =>
     dynamoDbConnection,
     stravaConnection,
     logger,
-    models: [
-      //TODO some models here
-    ],
   });
   logger.info('Dependency Injector loaded');
+
+  jobsLoader();
+  logger.info('Jobs started');
 
   await expressLoader({ app: expressApp });
   logger.info('Express Initialized');
