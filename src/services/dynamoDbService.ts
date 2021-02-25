@@ -51,6 +51,7 @@ const prepareItemParams = (item: ActivityItem) => {
 };
 
 const prepareFilterForScan = (filtersArray: ScanFilter[]) => {
+  //TO DO - if same keys, then merge them with OR
   const filtersForScan = {
     ExpressionAttributeNames: {},
     ExpressionAttributeValues: {},
@@ -73,12 +74,15 @@ export default class DynamoDbService {
   ) {}
 
   async getDynamoDbTableList(): Promise<ListTablesCommandOutput> {
+    this.logger.info('Sending list table request to DynamoDB');
     return await this.dynamoDb.listTables({});
   }
 
   async getDynamoDbTableDescription(tableName: string): Promise<DescribeTableOutput> {
     const params = { TableName: tableName };
-
+    this.logger.info(
+      'Sending describe table request to DynamoDB with params' + JSON.stringify(params),
+    );
     return await this.dynamoDb.describeTable(params);
   }
 
@@ -103,6 +107,7 @@ export default class DynamoDbService {
       TableName: tableName,
     };
 
+    this.logger.info('Sending scan table request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.scan(params);
   }
 
@@ -120,6 +125,9 @@ export default class DynamoDbService {
       TableName: tableName,
     };
 
+    this.logger.info(
+      'Sending query table request to DynamoDB with params' + JSON.stringify(params),
+    );
     return await this.dynamoDb.query(params);
   }
 
@@ -134,6 +142,7 @@ export default class DynamoDbService {
       params = { ...params, ...prepareFilterForScan(filtersArray) };
     }
 
+    this.logger.info('Sending scan table request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.scan(params);
   }
 
@@ -143,6 +152,7 @@ export default class DynamoDbService {
       params.Key[kvp.key] = { S: kvp.val };
     });
 
+    this.logger.info('Sending get item request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.getItem(params);
   }
 
@@ -153,6 +163,7 @@ export default class DynamoDbService {
       TableName: tableName,
     };
 
+    this.logger.info('Sending put item request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.putItem(params);
   }
 
@@ -171,6 +182,10 @@ export default class DynamoDbService {
         [tableName]: parsedItemsToAdd,
       },
     };
+
+    this.logger.info(
+      'Sending batch write item request to DynamoDB with params' + JSON.stringify(params),
+    );
     return await this.dynamoDb.batchWriteItem(params);
   }
 }
