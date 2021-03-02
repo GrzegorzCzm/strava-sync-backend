@@ -7,6 +7,7 @@ import {
   StravaClubMemberData,
 } from '../interfaces/IStrava';
 import { DynamoDbClubActivityData, FilterForDynamoDbTableScan } from '../interfaces/IDynamoDb';
+import config from '../config';
 
 import StravaService from '../services/stravaService';
 import DynamoDbService from '../services/dynamoDbService';
@@ -62,17 +63,52 @@ export default class ClubController {
 
   async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
     const filtersArray = this.prepareDynamoDbFilter(query);
+    console.log('filtersArray', filtersArray);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
-      process.env.DYNAMO_DB_ACTIVITIES_TABLE_NAME,
+      config.dynamoDB.ACTIVITIES_TABLE_NAME,
       filtersArray,
     );
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
 
-  async syncActivities(): Promise<void> {
-    console.log('SYNCING');
+  async syncActivities(): Promise<any> {
     const stravaActivities = await this.stravaServiceInstance.getClubActivities();
     this.logger.info(`Got ${stravaActivities.data.length} activities from Strava`);
+    const parsedStravaNewActivities = this.parseStravaActivities(stravaActivities.data);
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    const currentTimestamp = currentDate.getTime();
+
+    const currentDateMinusYear = new Date();
+    currentDateMinusYear.setFullYear(currentDateMinusYear.getFullYear() - 1);
+    currentDateMinusYear.setHours(0, 0, 0, 0);
+    const currentTimestampsMinusYear = currentDateMinusYear.getTime();
+
+    const dynamoDbActivities = await this.dynamoDbServiceInstance.getActivitiesFromDateRange(
+      config.dynamoDB.ACTIVITIES_TABLE_NAME,
+      currentTimestampsMinusYear,
+      currentTimestamp,
+    );
+
+    const parsedDynamoDBActiviteis = this.parseDynamodDbActivities(dynamoDbActivities.Items);
+    const diffActivities = this.getNewestActivities(
+      parsedDynamoDBActiviteis,
+      parsedStravaNewActivities,
+    );
+    if (diffActivities.length) {
+      this.logger.info(
+        `Newest ${diffActivities.length} activities to upload. Activities: ${JSON.stringify(
+          diffActivities.map(activity => activity.name),
+        )}`,
+      );
+      const uploadResult = await this.dynamoDbServiceInstance.putDynamoDbBatchItems(
+        config.dynamoDB.ACTIVITIES_TABLE_NAME,
+        diffActivities,
+      );
+      this.logger.info('Upload result' + JSON.stringify(uploadResult));
+    } else {
+      this.logger.info(`No new activities to upload.`);
+    }
   }
 
   private prepareDynamoDbFilter(query: unknown): FilterForDynamoDbTableScan[] {

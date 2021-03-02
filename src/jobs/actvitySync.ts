@@ -1,7 +1,7 @@
 import { Container, Service } from 'typedi';
 import { Logger } from 'winston';
 
-import ClubController from '../services/stravaService';
+import ClubController from '../controllers/clubController';
 
 @Service()
 export default class ActivitySync {

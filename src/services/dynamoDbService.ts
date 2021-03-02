@@ -138,7 +138,7 @@ export default class DynamoDbService {
     let params = {
       TableName: tableName,
     };
-    if (filtersArray) {
+    if (filtersArray.length) {
       params = { ...params, ...prepareFilterForScan(filtersArray) };
     }
 
