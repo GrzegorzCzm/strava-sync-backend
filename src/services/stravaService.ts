@@ -13,7 +13,13 @@ export default class StravaService {
   }
 
   private validateTokens = async () => {
-    const isTokenExpired = this.strava.tokensData.tokenExpirationDate > Date.now();
+    const currentTime = Date.now();
+    this.logger.info(
+      `Strava token validation - currentTime: ${new Date(
+        currentTime,
+      )}, access token exp. time: ${new Date(this.strava.tokensData.tokenExpirationDate)}`,
+    );
+    const isTokenExpired = this.strava.tokensData.tokenExpirationDate < currentTime;
     if (isTokenExpired) {
       const newTokensData = await this.strava.getNewTokens(this.strava.tokensData.refreshToken);
       this.strava.tokensData = newTokensData;
@@ -34,12 +40,20 @@ export default class StravaService {
   async callGet(path: string): Promise<AxiosResponse<any>> {
     await this.validateTokens();
     this.logger.info(`GET API call to ${path}`);
-    return this.strava.axios.get(path);
+    try {
+      return this.strava.axios.get(path);
+    } catch (error) {
+      this.logger.error('!!! Error has happend: ' + error?.message);
+    }
   }
 
   async callPost(path: string, params: unknown): Promise<AxiosResponse<unknown>> {
     await this.validateTokens();
     this.logger.info(`POST API call to ${path} with params ${JSON.stringify(params)}`);
-    return this.strava.axios.post(path, params);
+    try {
+      return this.strava.axios.post(path, params);
+    } catch (error) {
+      this.logger.error('!!! Error has happend: ' + error?.message);
+    }
   }
 }

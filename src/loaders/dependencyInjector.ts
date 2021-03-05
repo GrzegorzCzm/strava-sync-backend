@@ -16,7 +16,7 @@ export default ({
     Container.set('strava', stravaConnection);
     Container.set('logger', logger);
   } catch (e) {
-    logger.error('Error on dependency injector loader: %o', e);
+    logger.error('!!! Error on dependency injector loader: %o', e);
     throw e;
   }
 };
