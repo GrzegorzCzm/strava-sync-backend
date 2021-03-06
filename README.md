@@ -40,8 +40,7 @@ docker run --env-file ./.env --name strava-sync -p 49000:8080 -d <YOUR_NAME>/str
 ```
 docker build -f Dockerfile.dev -t <YOUR_NAME>/strava-sync-dev .
 docker run --name strava-sync -p 49000:8080 -d <YOUR_NAME>/strava-sync-dev
-docker run --name strava-sync-dev -p 49000:8080 -d -v ~/<PATH_TO_YOUR_PROJECT_FOLDER/src:/usr/app/src <YOUR_NAME>/strava-sync-dev
-
+docker run --name strava-sync-dev -p 49000:8080 -d -v ~/<PATH_TO_YOUR_PROJECT_FOLDER>/src:/usr/app/src <YOUR_NAME>/strava-sync-dev
 ```
 
 ## Other commands
@@ -49,4 +48,14 @@ docker run --name strava-sync-dev -p 49000:8080 -d -v ~/<PATH_TO_YOUR_PROJECT_FO
 docker ps --all
 docker logs <containerID>
 docker exec -it <comntainerID> sh
+```
+
+
+## Docker compose 
+```
+docker-compose up  // run docker-compose
+docker-compose up -d  // run docker-compose in background
+docker-compose up --build  // rebuild and run docker-compose
+docker-compose down  //stop docker-compose
+docker-compose ps  //container created from docker-compose
 ```
