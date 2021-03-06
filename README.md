@@ -33,13 +33,15 @@ npm run start
 
 ## Production
 ```
-docker build -t czmielewski/strava-sync .
-docker run --env-file ./.env --name strava-sync -p 49000:8080 -d czmielewski/strava-sync 
+docker build -t <YOUR_NAME>/strava-sync .
+docker run --env-file ./.env --name strava-sync -p 49000:8080 -d <YOUR_NAME>/strava-sync 
 ```
 ## Development
 ```
-docker build -f Dockerfile.dev -t czmielewski/strava-sync-dev .
-docker run --name strava-sync -p 49000:8080 -d czmielewski/strava-sync-dev
+docker build -f Dockerfile.dev -t <YOUR_NAME>/strava-sync-dev .
+docker run --name strava-sync -p 49000:8080 -d <YOUR_NAME>/strava-sync-dev
+docker run --name strava-sync-dev -p 49000:8080 -d -v ~/<PATH_TO_YOUR_PROJECT_FOLDER/src:/usr/app/src <YOUR_NAME>/strava-sync-dev
+
 ```
 
 ## Other commands
