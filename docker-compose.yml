@@ -1,0 +1,10 @@
+version: '3'
+services:
+  strava-sync-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    ports: 
+      - "49000:8080"
+    volumes: 
+      - ~/<PATH_TO_YOUR_PROJECT_FOLDER>/src:/usr/app/src

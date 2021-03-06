@@ -1,7 +1,9 @@
+const FIVE_MINUTES_IN_MS = 300000;
+
 export default {
   server: {
-    PORT: process.env.PORT ?? 3000,
-    ACTIVITY_SYNC_DELAY_MS: 10000,
+    PORT: process.env.PORT ?? 8080,
+    ACTIVITY_SYNC_DELAY_MS: FIVE_MINUTES_IN_MS,
   },
   urls: {
     STRAVA_BASE_URL: 'https://www.strava.com/api/v3/',

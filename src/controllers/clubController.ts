@@ -63,7 +63,6 @@ export default class ClubController {
 
   async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
     const filtersArray = this.prepareDynamoDbFilter(query);
-    console.log('filtersArray', filtersArray);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
       config.dynamoDB.ACTIVITIES_TABLE_NAME,
       filtersArray,

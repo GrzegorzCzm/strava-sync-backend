@@ -31,12 +31,19 @@ const getRefreshedTokens = async (refreshToken: string): Promise<Models.StravaTo
       refresh_token: refreshToken,
     });
     const { access_token, refresh_token, expires_at } = result.data;
+    const unfiedTokenExpirationDate = expires_at * 1000;
+    logger.info(`Strava access token exporation date: ` + new Date(unfiedTokenExpirationDate));
     return {
       accessToken: access_token,
       refreshToken: refresh_token,
-      tokenExpirationDate: new Date(expires_at).getTime(),
+      tokenExpirationDate: unfiedTokenExpirationDate,
     };
   } catch (error) {
-    logger.error(error?.message);
+    logger.error('!!! Error has happend while refreshing strava tokens: ' + error?.message);
+    return {
+      accessToken: null,
+      refreshToken: refreshToken,
+      tokenExpirationDate: Date.now(),
+    };
   }
 };
