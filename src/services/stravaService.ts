@@ -1,6 +1,5 @@
 import { Service, Inject } from 'typedi';
 import { Logger } from 'winston';
-import { AxiosResponse } from 'axios';
 
 @Service()
 export default class StravaService {
@@ -27,33 +26,35 @@ export default class StravaService {
     }
   };
 
-  // TODO - Models.StravaClubMembers is not the correct one
-  getClubMembers(clubId = this.clubId): Promise<AxiosResponse<Models.StravaClubMembers>> {
+  getClubMembers(clubId = this.clubId): Promise<unknown> {
     return this.callGet(`clubs/${clubId}/members`);
   }
 
-  getClubActivities(clubId = this.clubId): Promise<AxiosResponse<Models.StravaClubActivities>> {
+  getClubActivities(clubId = this.clubId): Promise<unknown> {
     return this.callGet(`clubs/${clubId}/activities?per_page=25`);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async callGet(path: string): Promise<AxiosResponse<any>> {
+  async callGet(path: string): Promise<unknown> {
     await this.validateTokens();
     this.logger.info(`GET API call to ${path}`);
     try {
-      return this.strava.axios.get(path);
+      const results = await this.strava.axios.get(path);
+      return results.data;
     } catch (error) {
       this.logger.error('!!! Error has happend: ' + error?.message);
+      return [];
     }
   }
 
-  async callPost(path: string, params: unknown): Promise<AxiosResponse<unknown>> {
+  async callPost(path: string, params: unknown): Promise<unknown> {
     await this.validateTokens();
     this.logger.info(`POST API call to ${path} with params ${JSON.stringify(params)}`);
     try {
-      return this.strava.axios.post(path, params);
+      const results = await this.strava.axios.post(path, params);
+      return results;
     } catch (error) {
       this.logger.error('!!! Error has happend: ' + error?.message);
+      return;
     }
   }
 }

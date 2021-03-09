@@ -70,10 +70,10 @@ export default class ClubController {
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
 
-  async syncActivities(): Promise<any> {
+  async syncActivities(): Promise<void> {
     const stravaActivities = await this.stravaServiceInstance.getClubActivities();
-    this.logger.info(`Got ${stravaActivities.data.length} activities from Strava`);
-    const parsedStravaNewActivities = this.parseStravaActivities(stravaActivities.data);
+    this.logger.info(`Got ${stravaActivities.length} activities from Strava`);
+    const parsedStravaNewActivities = this.parseStravaActivities(stravaActivities);
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
     const currentTimestamp = currentDate.getTime();
