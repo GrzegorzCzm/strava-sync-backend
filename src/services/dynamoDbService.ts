@@ -11,6 +11,8 @@ import {
   BatchWriteItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 
+import { ParsedActivityQuery } from '../interfaces/IRoutes';
+
 interface ScanFilter {
   key: string;
   val: string;
@@ -131,16 +133,14 @@ export default class DynamoDbService {
     return await this.dynamoDb.query(params);
   }
 
-  async getDynamoDbTableScan(
-    tableName: string,
-    filtersArray: ScanFilter[],
-  ): Promise<QueryCommandOutput> {
-    let params = {
+  async getDynamoDbTableScan(tableName: string, parsedQuery: any): Promise<QueryCommandOutput> {
+    const params = {
       TableName: tableName,
     };
-    if (filtersArray.length) {
-      params = { ...params, ...prepareFilterForScan(filtersArray) };
-    }
+    // TO DO
+    // if (parsedQuery) {
+    //   params = { ...params, ...prepareFilterForScan(parsedQuery) };
+    // }
 
     this.logger.info('Sending scan table request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.scan(params);

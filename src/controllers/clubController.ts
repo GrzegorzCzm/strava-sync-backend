@@ -1,12 +1,13 @@
 import { Inject, Container, Service } from 'typedi';
 import { Logger } from 'winston';
 
+import { ParsedActivityQuery } from '../interfaces/IRoutes';
+import { DynamoDbClubActivityData } from '../interfaces/IDynamoDb';
 import {
   StravaClubActivityData,
   ProccessedActivity,
   StravaClubMemberData,
 } from '../interfaces/IStrava';
-import { DynamoDbClubActivityData, FilterForDynamoDbTableScan } from '../interfaces/IDynamoDb';
 import config from '../config';
 
 import StravaService from '../services/stravaService';
@@ -62,10 +63,10 @@ export default class ClubController {
   }
 
   async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
-    const filtersArray = this.prepareDynamoDbFilter(query);
+    const parsedActivitiesQuery = this.parseActivitiesUrlQuery(query);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
       config.dynamoDB.ACTIVITIES_TABLE_NAME,
-      filtersArray,
+      parsedActivitiesQuery,
     );
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
@@ -110,13 +111,55 @@ export default class ClubController {
     }
   }
 
-  private prepareDynamoDbFilter(query: unknown): FilterForDynamoDbTableScan[] {
-    const filtersArray: FilterForDynamoDbTableScan[] = [];
+  private parseActivitiesUrlQuery(query: unknown): ParsedActivityQuery {
+    const parsedQuery: ParsedActivityQuery = {
+      dateRange: {},
+      movingTimeRange: {},
+      distanceRange: {},
+      athletes: [],
+      names: [],
+      types: [],
+    };
+
     for (const [key, val] of Object.entries(query)) {
-      const parsedValueToNumber = Number(val);
-      filtersArray.push({ key, val, valType: isNaN(parsedValueToNumber) ? 'S' : 'N' });
+      switch (key) {
+        case 'dateFrom':
+          parsedQuery.dateRange.from = this.getTimestamp(val);
+          break;
+        case 'dateTo':
+          parsedQuery.dateRange.to = this.getTimestamp(val);
+          break;
+        case 'movingFrom':
+          parsedQuery.movingTimeRange.from = this.getNumber(val);
+          break;
+        case 'movingTo':
+          parsedQuery.movingTimeRange.to = this.getNumber(val);
+          break;
+        case 'distanceFrom':
+          parsedQuery.distanceRange.from = this.getNumber(val);
+          break;
+        case 'distanceTo':
+          parsedQuery.distanceRange.to = this.getNumber(val);
+          break;
+        case 'athlete':
+          parsedQuery.athletes.push(val);
+          break;
+        case 'name':
+          parsedQuery.names.push(val);
+        case 'type':
+          parsedQuery.types.push(val);
+      }
     }
-    return filtersArray;
+    return parsedQuery;
+  }
+
+  private getTimestamp(value: string): number | undefined {
+    const timestamp = Date.parse(value);
+    return isNaN(timestamp) ? undefined : timestamp;
+  }
+  private getNumber(value: string): number | undefined {
+    const parsedNumber = Number(value);
+    return isNaN(parsedNumber) ? undefined : parsedNumber;
   }
 
   private parseMembers(stravaClubMembers: StravaClubMemberData[]): string[] {
