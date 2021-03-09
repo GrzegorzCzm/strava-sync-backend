@@ -55,7 +55,7 @@ $ sudo systemctl restart docker.service
 
 ```
 $ docker build -t <YOUR_NAME>/strava-sync .
-$ docker run --env-file ./.env --name strava-sync -p 0.0.0.0.8080:8080 -d <YOUR_NAME>/strava-sync 
+$ docker run --env-file ./.env --name strava-sync -p 0.0.0.0:8080:8080 -d <YOUR_NAME>/strava-sync 
 ```
 ## Development
 ```
