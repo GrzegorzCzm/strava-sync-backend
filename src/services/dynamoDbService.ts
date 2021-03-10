@@ -11,13 +11,7 @@ import {
   BatchWriteItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 
-import { ParsedActivityQuery } from '../interfaces/IRoutes';
-
-interface ScanFilter {
-  key: string;
-  val: string;
-  valType: 'S' | 'N';
-}
+import { ParsedQuery } from '../interfaces/IRoutes';
 
 interface KVP {
   key: string;
@@ -52,19 +46,43 @@ const prepareItemParams = (item: ActivityItem) => {
   return params;
 };
 
-const prepareFilterForScan = (filtersArray: ScanFilter[]) => {
-  //TO DO - if same keys, then merge them with OR
+const prepareFilterForScan = (parsedQuery: ParsedQuery) => {
+  //#title between :letter1 and :letter2  <- range
+  //#yr = :yyyy <- equal
+  //#yr = :yyy1 OR #yr = :yyy2
+
   const filtersForScan = {
     ExpressionAttributeNames: {},
     ExpressionAttributeValues: {},
     FilterExpression: ``,
   };
-  filtersArray.forEach((filter: ScanFilter, index) => {
-    filtersForScan.ExpressionAttributeNames[`#key${index}`] = filter.key;
-    filtersForScan.ExpressionAttributeValues[`:val${index}`] = { [filter.valType]: filter.val };
-    filtersForScan.FilterExpression +=
-      (filtersForScan.FilterExpression ? ' AND ' : '') + `#key${index} = :val${index}`;
-  });
+
+  for (const [key, val] of Object.entries(parsedQuery)) {
+    if (Array.isArray(val) && val.length) {
+      filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
+      const valuesMappedConditions: string[] = [];
+      val.forEach((value: string | number, index) => {
+        const valFieldName = `:val_${key}${index}`;
+        filtersForScan.ExpressionAttributeValues[valFieldName] = value;
+        valuesMappedConditions.push(`#key_${key} = ${valFieldName}`);
+      });
+
+      filtersForScan.FilterExpression += filtersForScan.FilterExpression ? ' AND (' : '(';
+      filtersForScan.FilterExpression += valuesMappedConditions.join(' OR ');
+      filtersForScan.FilterExpression += ')';
+    } else if (typeof val === 'string') {
+      filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
+      filtersForScan.ExpressionAttributeValues[`:val_${key}`] = val;
+      filtersForScan.FilterExpression +=
+        (filtersForScan.FilterExpression ? ' AND ' : '') + `#key_${key} = :val${key}`;
+    } else if (typeof val === 'object') {
+      //TO DO - handle range
+      console.log('Hi, I am range ' + val);
+    }
+  }
+
+  console.log('filtersForScan', filtersForScan);
+
   return filtersForScan;
 };
 
@@ -133,7 +151,10 @@ export default class DynamoDbService {
     return await this.dynamoDb.query(params);
   }
 
-  async getDynamoDbTableScan(tableName: string, parsedQuery: any): Promise<QueryCommandOutput> {
+  async getDynamoDbTableScan(
+    tableName: string,
+    parsedQuery: ParsedQuery,
+  ): Promise<QueryCommandOutput> {
     const params = {
       TableName: tableName,
     };
@@ -141,6 +162,7 @@ export default class DynamoDbService {
     // if (parsedQuery) {
     //   params = { ...params, ...prepareFilterForScan(parsedQuery) };
     // }
+    prepareFilterForScan(parsedQuery);
 
     this.logger.info('Sending scan table request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.scan(params);

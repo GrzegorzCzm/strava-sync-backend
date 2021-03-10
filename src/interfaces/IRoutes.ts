@@ -1,13 +1,17 @@
-interface Range {
-  from?: number;
-  to?: number;
+export interface Range {
+  from: number;
+  to: number;
 }
 
 export interface ParsedActivityQuery {
-  dateRange?: Range;
-  movingTimeRange?: Range;
-  distanceRange?: Range;
-  athletes?: string[];
-  names?: string[];
-  types?: string[];
+  date?: Range;
+  movingTime?: Range;
+  distance?: Range;
+  athlete?: string[];
+  name?: string[];
+  type?: string[];
+}
+
+export interface ParsedQuery {
+  [fieldName: string]: Range | string[] | string;
 }

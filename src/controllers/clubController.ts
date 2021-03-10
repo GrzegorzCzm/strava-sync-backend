@@ -112,44 +112,61 @@ export default class ClubController {
   }
 
   private parseActivitiesUrlQuery(query: unknown): ParsedActivityQuery {
+    console.log('query', query);
     const parsedQuery: ParsedActivityQuery = {
-      dateRange: {},
-      movingTimeRange: {},
-      distanceRange: {},
-      athletes: [],
-      names: [],
-      types: [],
+      date: { from: undefined, to: undefined },
+      movingTime: { from: undefined, to: undefined },
+      distance: { from: undefined, to: undefined },
+      athlete: [],
+      name: [],
+      type: [],
     };
 
     for (const [key, val] of Object.entries(query)) {
       switch (key) {
         case 'dateFrom':
-          parsedQuery.dateRange.from = this.getTimestamp(val);
+          parsedQuery.date.from = this.getTimestamp(val);
           break;
         case 'dateTo':
-          parsedQuery.dateRange.to = this.getTimestamp(val);
+          parsedQuery.date.to = this.getTimestamp(val);
           break;
         case 'movingFrom':
-          parsedQuery.movingTimeRange.from = this.getNumber(val);
+          parsedQuery.movingTime.from = this.getNumber(val);
           break;
         case 'movingTo':
-          parsedQuery.movingTimeRange.to = this.getNumber(val);
+          parsedQuery.movingTime.to = this.getNumber(val);
           break;
         case 'distanceFrom':
-          parsedQuery.distanceRange.from = this.getNumber(val);
+          parsedQuery.distance.from = this.getNumber(val);
           break;
         case 'distanceTo':
-          parsedQuery.distanceRange.to = this.getNumber(val);
+          parsedQuery.distance.to = this.getNumber(val);
           break;
         case 'athlete':
-          parsedQuery.athletes.push(val);
+          parsedQuery.athlete = val;
           break;
         case 'name':
-          parsedQuery.names.push(val);
+          parsedQuery.name = val;
+          break;
         case 'type':
-          parsedQuery.types.push(val);
+          parsedQuery.type = val;
       }
     }
+
+    if (parsedQuery.date.from && !parsedQuery.date.to) parsedQuery.date.to = Date.now();
+    if (!parsedQuery.date.from && parsedQuery.date.to) parsedQuery.date.from = 0;
+
+    if (typeof parsedQuery.movingTime.to === 'number' && parsedQuery.movingTime.from === undefined)
+      parsedQuery.movingTime.from = 0;
+    if (parsedQuery.movingTime.to === undefined && typeof parsedQuery.movingTime.from === 'number')
+      parsedQuery.movingTime.to = 999999999;
+
+    if (typeof parsedQuery.distance.to === 'number' && parsedQuery.distance.from === undefined)
+      parsedQuery.distance.from = 0;
+    if (parsedQuery.distance.to === undefined && typeof parsedQuery.distance.from === 'number')
+      parsedQuery.distance.to = 999999999;
+
+    console.log('parsedQuery', parsedQuery);
     return parsedQuery;
   }
 
