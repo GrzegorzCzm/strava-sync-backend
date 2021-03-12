@@ -52,42 +52,44 @@ const prepareFilterForScan = (parsedQuery: ParsedQuery) => {
     ExpressionAttributeValues: {},
     FilterExpression: ``,
   };
+  let isAnyFilterAdded = false;
 
   for (const [key, val] of Object.entries(parsedQuery)) {
-    if (Array.isArray(val) && val.length) {
+    if (Array.isArray(val.data) && val.data.length) {
       filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
       const valuesMappedConditions: string[] = [];
-      val.forEach((value: string | number, index) => {
+      val.data.forEach((value: string | number, index) => {
         const valFieldName = `:val_${key}${index}`;
-        filtersForScan.ExpressionAttributeValues[valFieldName] = value;
+        filtersForScan.ExpressionAttributeValues[valFieldName] = { [val.type]: value };
         valuesMappedConditions.push(`#key_${key} = ${valFieldName}`);
       });
 
       filtersForScan.FilterExpression += filtersForScan.FilterExpression ? ' AND (' : '(';
       filtersForScan.FilterExpression += valuesMappedConditions.join(' OR ');
       filtersForScan.FilterExpression += ')';
-    } else if (typeof val === 'string') {
+      isAnyFilterAdded = true;
+    } else if (typeof val.data === 'string') {
       filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
-      filtersForScan.ExpressionAttributeValues[`:val_${key}`] = val;
+      filtersForScan.ExpressionAttributeValues[`:val_${key}`] = { [val.type]: val.data };
       filtersForScan.FilterExpression +=
-        (filtersForScan.FilterExpression ? ' AND ' : '') + `#key_${key} = :val${key}`;
-    } else if (isRangeObject(val)) {
+        (filtersForScan.FilterExpression ? ' AND ' : '') + `#key_${key} = :val_${key}`;
+      isAnyFilterAdded = true;
+    } else if (isRangeObject(val.data)) {
       filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
-      filtersForScan.ExpressionAttributeValues[`:val_${key}_from`] = val.from;
-      filtersForScan.ExpressionAttributeValues[`:val_${key}_to`] = val.to;
+      filtersForScan.ExpressionAttributeValues[`:val_${key}_from`] = { [val.type]: val.data.from };
+      filtersForScan.ExpressionAttributeValues[`:val_${key}_to`] = { [val.type]: val.data.to };
       filtersForScan.FilterExpression +=
         (filtersForScan.FilterExpression ? ' AND (' : '(') +
         `#key_${key} between :val_${key}_from and :val_${key}_to )`;
+      isAnyFilterAdded = true;
     }
   }
 
-  console.log('filtersForScan', filtersForScan);
-
-  return filtersForScan;
+  return isAnyFilterAdded && filtersForScan;
 };
 
 const isRangeObject = (val: Range | string[] | string): val is Range => {
-  return typeof (val as Range).from === 'number' && typeof (val as Range).to === 'number';
+  return typeof (val as Range).from === 'string' && typeof (val as Range).to === 'string';
 };
 
 @Service()

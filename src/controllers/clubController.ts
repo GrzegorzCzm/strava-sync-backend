@@ -112,71 +112,83 @@ export default class ClubController {
   }
 
   private parseActivitiesUrlQuery(query: unknown): ParsedActivityQuery {
-    console.log('query', query);
     const parsedQuery: ParsedActivityQuery = {
-      date: { from: undefined, to: undefined },
-      movingTime: { from: undefined, to: undefined },
-      distance: { from: undefined, to: undefined },
-      athlete: [],
-      name: [],
-      type: [],
+      date: { type: 'N', data: { from: undefined, to: undefined } },
+      movingTime: { type: 'N', data: { from: undefined, to: undefined } },
+      distance: { type: 'N', data: { from: undefined, to: undefined } },
+      athlete: { type: 'S', data: [] },
+      name: { type: 'S', data: [] },
+      type: { type: 'S', data: [] },
     };
 
     for (const [key, val] of Object.entries(query)) {
       switch (key) {
         case 'dateFrom':
-          parsedQuery.date.from = this.getTimestamp(val);
+          parsedQuery.date.data.from = this.getTimestamp(val);
           break;
         case 'dateTo':
-          parsedQuery.date.to = this.getTimestamp(val);
+          parsedQuery.date.data.to = this.getTimestamp(val);
           break;
         case 'movingFrom':
-          parsedQuery.movingTime.from = this.getNumber(val);
+          parsedQuery.movingTime.data.from = this.getNumber(val);
           break;
         case 'movingTo':
-          parsedQuery.movingTime.to = this.getNumber(val);
+          parsedQuery.movingTime.data.to = this.getNumber(val);
           break;
         case 'distanceFrom':
-          parsedQuery.distance.from = this.getNumber(val);
+          parsedQuery.distance.data.from = this.getNumber(val);
           break;
         case 'distanceTo':
-          parsedQuery.distance.to = this.getNumber(val);
+          parsedQuery.distance.data.to = this.getNumber(val);
           break;
         case 'athlete':
-          parsedQuery.athlete = val;
+          parsedQuery.athlete.data = val;
           break;
         case 'name':
-          parsedQuery.name = val;
+          parsedQuery.name.data = val;
           break;
         case 'type':
-          parsedQuery.type = val;
+          parsedQuery.type.data = val;
       }
     }
 
-    if (parsedQuery.date.from && !parsedQuery.date.to) parsedQuery.date.to = Date.now();
-    if (!parsedQuery.date.from && parsedQuery.date.to) parsedQuery.date.from = 0;
+    if (parsedQuery.movingTime.data.from && !parsedQuery.movingTime.data.to)
+      parsedQuery.movingTime.data.to = `${Date.now()}`;
+    if (!parsedQuery.movingTime.data.from && parsedQuery.movingTime.data.to)
+      parsedQuery.movingTime.data.from = '0';
 
-    if (typeof parsedQuery.movingTime.to === 'number' && parsedQuery.movingTime.from === undefined)
-      parsedQuery.movingTime.from = 0;
-    if (parsedQuery.movingTime.to === undefined && typeof parsedQuery.movingTime.from === 'number')
-      parsedQuery.movingTime.to = 999999999;
+    if (
+      typeof parsedQuery.movingTime.data.to === 'number' &&
+      parsedQuery.movingTime.data.from === undefined
+    )
+      parsedQuery.movingTime.data.from = '0';
+    if (
+      parsedQuery.movingTime.data.to === undefined &&
+      typeof parsedQuery.movingTime.data.from === 'number'
+    )
+      parsedQuery.movingTime.data.to = '999999999';
 
-    if (typeof parsedQuery.distance.to === 'number' && parsedQuery.distance.from === undefined)
-      parsedQuery.distance.from = 0;
-    if (parsedQuery.distance.to === undefined && typeof parsedQuery.distance.from === 'number')
-      parsedQuery.distance.to = 999999999;
+    if (
+      typeof parsedQuery.distance.data.to === 'number' &&
+      parsedQuery.distance.data.from === undefined
+    )
+      parsedQuery.distance.data.from = '0';
+    if (
+      parsedQuery.distance.data.to === undefined &&
+      typeof parsedQuery.distance.data.from === 'number'
+    )
+      parsedQuery.distance.data.to = '999999999';
 
-    console.log('parsedQuery', parsedQuery);
     return parsedQuery;
   }
 
-  private getTimestamp(value: string): number | undefined {
+  private getTimestamp(value: string): string | undefined {
     const timestamp = Date.parse(value);
-    return isNaN(timestamp) ? undefined : timestamp;
+    return isNaN(timestamp) ? undefined : `${timestamp}`;
   }
-  private getNumber(value: string): number | undefined {
+  private getNumber(value: string): string | undefined {
     const parsedNumber = Number(value);
-    return isNaN(parsedNumber) ? undefined : parsedNumber;
+    return isNaN(parsedNumber) ? undefined : `${parsedNumber}`;
   }
 
   private parseMembers(stravaClubMembers: StravaClubMemberData[]): string[] {
