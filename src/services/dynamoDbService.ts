@@ -11,7 +11,7 @@ import {
   BatchWriteItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
 
-import { ParsedQuery } from '../interfaces/IRoutes';
+import { ParsedQuery, Range } from '../interfaces/IRoutes';
 
 interface KVP {
   key: string;
@@ -47,10 +47,6 @@ const prepareItemParams = (item: ActivityItem) => {
 };
 
 const prepareFilterForScan = (parsedQuery: ParsedQuery) => {
-  //#title between :letter1 and :letter2  <- range
-  //#yr = :yyyy <- equal
-  //#yr = :yyy1 OR #yr = :yyy2
-
   const filtersForScan = {
     ExpressionAttributeNames: {},
     ExpressionAttributeValues: {},
@@ -75,15 +71,23 @@ const prepareFilterForScan = (parsedQuery: ParsedQuery) => {
       filtersForScan.ExpressionAttributeValues[`:val_${key}`] = val;
       filtersForScan.FilterExpression +=
         (filtersForScan.FilterExpression ? ' AND ' : '') + `#key_${key} = :val${key}`;
-    } else if (typeof val === 'object') {
-      //TO DO - handle range
-      console.log('Hi, I am range ' + val);
+    } else if (isRangeObject(val)) {
+      filtersForScan.ExpressionAttributeNames[`#key_${key}`] = key;
+      filtersForScan.ExpressionAttributeValues[`:val_${key}_from`] = val.from;
+      filtersForScan.ExpressionAttributeValues[`:val_${key}_to`] = val.to;
+      filtersForScan.FilterExpression +=
+        (filtersForScan.FilterExpression ? ' AND (' : '(') +
+        `#key_${key} between :val_${key}_from and :val_${key}_to )`;
     }
   }
 
   console.log('filtersForScan', filtersForScan);
 
   return filtersForScan;
+};
+
+const isRangeObject = (val: Range | string[] | string): val is Range => {
+  return typeof (val as Range).from === 'number' && typeof (val as Range).to === 'number';
 };
 
 @Service()
@@ -155,14 +159,12 @@ export default class DynamoDbService {
     tableName: string,
     parsedQuery: ParsedQuery,
   ): Promise<QueryCommandOutput> {
-    const params = {
+    let params = {
       TableName: tableName,
     };
-    // TO DO
-    // if (parsedQuery) {
-    //   params = { ...params, ...prepareFilterForScan(parsedQuery) };
-    // }
-    prepareFilterForScan(parsedQuery);
+    if (parsedQuery) {
+      params = { ...params, ...prepareFilterForScan(parsedQuery) };
+    }
 
     this.logger.info('Sending scan table request to DynamoDB with params' + JSON.stringify(params));
     return await this.dynamoDb.scan(params);
