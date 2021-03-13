@@ -1,12 +1,13 @@
 import { Inject, Container, Service } from 'typedi';
 import { Logger } from 'winston';
 
+import { ParsedActivityQuery } from '../interfaces/IRoutes';
+import { DynamoDbClubActivityData } from '../interfaces/IDynamoDb';
 import {
   StravaClubActivityData,
   ProccessedActivity,
   StravaClubMemberData,
 } from '../interfaces/IStrava';
-import { DynamoDbClubActivityData, FilterForDynamoDbTableScan } from '../interfaces/IDynamoDb';
 import config from '../config';
 
 import StravaService from '../services/stravaService';
@@ -62,10 +63,10 @@ export default class ClubController {
   }
 
   async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
-    const filtersArray = this.prepareDynamoDbFilter(query);
+    const parsedActivitiesQuery = this.parseActivitiesUrlQuery(query);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
       config.dynamoDB.ACTIVITIES_TABLE_NAME,
-      filtersArray,
+      parsedActivitiesQuery,
     );
     return this.parseDynamodDbActivities(dynamoDbRes.Items);
   }
@@ -110,13 +111,84 @@ export default class ClubController {
     }
   }
 
-  private prepareDynamoDbFilter(query: unknown): FilterForDynamoDbTableScan[] {
-    const filtersArray: FilterForDynamoDbTableScan[] = [];
+  private parseActivitiesUrlQuery(query: unknown): ParsedActivityQuery {
+    const parsedQuery: ParsedActivityQuery = {
+      date: { type: 'N', data: { from: undefined, to: undefined } },
+      movingTime: { type: 'N', data: { from: undefined, to: undefined } },
+      distance: { type: 'N', data: { from: undefined, to: undefined } },
+      athlete: { type: 'S', data: [] },
+      name: { type: 'S', data: [] },
+      type: { type: 'S', data: [] },
+    };
+
     for (const [key, val] of Object.entries(query)) {
-      const parsedValueToNumber = Number(val);
-      filtersArray.push({ key, val, valType: isNaN(parsedValueToNumber) ? 'S' : 'N' });
+      switch (key) {
+        case 'dateFrom':
+          parsedQuery.date.data.from = this.getTimestamp(val);
+          break;
+        case 'dateTo':
+          parsedQuery.date.data.to = this.getTimestamp(val);
+          break;
+        case 'movingFrom':
+          parsedQuery.movingTime.data.from = this.getNumber(val);
+          break;
+        case 'movingTo':
+          parsedQuery.movingTime.data.to = this.getNumber(val);
+          break;
+        case 'distanceFrom':
+          parsedQuery.distance.data.from = this.getNumber(val);
+          break;
+        case 'distanceTo':
+          parsedQuery.distance.data.to = this.getNumber(val);
+          break;
+        case 'athlete':
+          parsedQuery.athlete.data = val;
+          break;
+        case 'name':
+          parsedQuery.name.data = val;
+          break;
+        case 'type':
+          parsedQuery.type.data = val;
+      }
     }
-    return filtersArray;
+
+    if (parsedQuery.movingTime.data.from && !parsedQuery.movingTime.data.to)
+      parsedQuery.movingTime.data.to = `${Date.now()}`;
+    if (!parsedQuery.movingTime.data.from && parsedQuery.movingTime.data.to)
+      parsedQuery.movingTime.data.from = '0';
+
+    if (
+      typeof parsedQuery.movingTime.data.to === 'number' &&
+      parsedQuery.movingTime.data.from === undefined
+    )
+      parsedQuery.movingTime.data.from = '0';
+    if (
+      parsedQuery.movingTime.data.to === undefined &&
+      typeof parsedQuery.movingTime.data.from === 'number'
+    )
+      parsedQuery.movingTime.data.to = '999999999';
+
+    if (
+      typeof parsedQuery.distance.data.to === 'number' &&
+      parsedQuery.distance.data.from === undefined
+    )
+      parsedQuery.distance.data.from = '0';
+    if (
+      parsedQuery.distance.data.to === undefined &&
+      typeof parsedQuery.distance.data.from === 'number'
+    )
+      parsedQuery.distance.data.to = '999999999';
+
+    return parsedQuery;
+  }
+
+  private getTimestamp(value: string): string | undefined {
+    const timestamp = Date.parse(value);
+    return isNaN(timestamp) ? undefined : `${timestamp}`;
+  }
+  private getNumber(value: string): string | undefined {
+    const parsedNumber = Number(value);
+    return isNaN(parsedNumber) ? undefined : `${parsedNumber}`;
   }
 
   private parseMembers(stravaClubMembers: StravaClubMemberData[]): string[] {
