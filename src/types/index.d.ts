@@ -1,5 +1,4 @@
 import {
-  StravaData,
   StravaTokensData,
   StravaClubMembersData,
   StravaClubActivitiesData,
@@ -7,7 +6,6 @@ import {
 
 declare global {
   namespace Models {
-    export type Strava = StravaData;
     export type StravaTokens = StravaTokensData;
     export type StravaClubMembers = StravaClubMembersData;
     export type StravaClubActivities = StravaClubActivitiesData;

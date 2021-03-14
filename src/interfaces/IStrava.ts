@@ -1,15 +1,7 @@
-import { AxiosInstance } from 'axios';
-
 export interface StravaTokensData {
   accessToken: string;
   refreshToken: string;
   tokenExpirationDate: number;
-}
-
-export interface StravaData {
-  axios: AxiosInstance;
-  tokensData: StravaTokensData;
-  getNewTokens: (refreshToken: string) => Promise<StravaTokensData>;
 }
 
 export interface StravaClubMemberData {
