@@ -3,59 +3,69 @@ import { Logger } from 'winston';
 import { AxiosInstance } from 'axios';
 import config from '../config';
 
-const updateAccessTokens = async (redis, stravaConnection, logger, stravaRefreshToken?: string) => {
-  const refreshToken = stravaRefreshToken ?? (await redis.getAsync('stravaRefreshToken'));
-
-  try {
-    const result = await stravaConnection.post(config.urls.STRAVA_TOKENS_URL, {
-      client_id: process.env.STRAVA_CLIENT_ID,
-      client_secret: process.env.STRAVA_CLIENT_SECRET,
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    });
-    const { access_token, refresh_token, expires_at } = result.data;
-    const unfiedTokenExpirationDate = new Date(expires_at * 1000);
-    logger.info(`Strava access token exporation date: ` + unfiedTokenExpirationDate);
-    await redis.setAsync('stravaAccessTokenExpirationDate', unfiedTokenExpirationDate);
-    await redis.setAsync('stravaAccessToken', access_token);
-    await redis.setAsync('stravaRefreshToken', refresh_token);
-    stravaConnection.defaults.headers.Authorization = `Bearer ${access_token}`;
-    return;
-  } catch (error) {
-    logger.error('!!! Error has happend while refreshing strava tokens: ' + error?.message);
-  }
-};
-
 @Service()
 export default class StravaService {
   clubId = '';
   constructor(
     @Inject('logger') private logger: Logger,
     @Inject('strava') private stravaConnection: AxiosInstance,
-    @Inject('redis') private redis: any,
+    @Inject('redis') private redis: Models.Redis,
   ) {
     this.clubId = process.env.STRAVA_CLUB_ID;
-    updateAccessTokens(
-      this.redis,
-      this.stravaConnection,
-      this.logger,
-      process.env.STRAVA_REFRESH_TOKEN,
-    );
   }
+
+  updateAccessTokens = async (): Promise<void> => {
+    let refreshToken;
+    try {
+      refreshToken = await this.redis.getAsync('stravaRefreshToken');
+    } catch (error) {
+      this.logger.error(
+        '!!! Error has happened while fetching strava refresh token from DB. Default token will be taken. ' +
+          error?.message,
+      );
+    }
+    refreshToken = refreshToken ?? process.env.STRAVA_REFRESH_TOKEN;
+
+    try {
+      const result = await this.stravaConnection.post(config.urls.STRAVA_TOKENS_URL, {
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      });
+      const { access_token, refresh_token, expires_at } = result.data;
+      const unfiedTokenExpirationDate = new Date(expires_at * 1000);
+      this.logger.info(`Strava access token new exporation date: ` + unfiedTokenExpirationDate);
+      await this.redis.setAsync('stravaAccessTokenExpirationDate', unfiedTokenExpirationDate);
+      await this.redis.setAsync('stravaRefreshToken', refresh_token);
+      this.stravaConnection.defaults.headers.Authorization = `Bearer ${access_token}`;
+      return;
+    } catch (error) {
+      this.logger.error('!!! Error has happend while refreshing strava tokens: ' + error?.message);
+    }
+  };
 
   private validateTokens = async () => {
     const currentTime = Date.now();
-    const stravaAccessTokenExpirationDate = await this.redis.getAsync(
-      'stravaAccessTokenExpirationDate',
-    );
+
+    let stravaAccessTokenExpirationDate;
+    try {
+      stravaAccessTokenExpirationDate = await this.redis.getAsync(
+        'stravaAccessTokenExpirationDate',
+      );
+    } catch (error) {
+      console.log('Error while getting, exp data', stravaAccessTokenExpirationDate);
+    }
+
     this.logger.info(
       `Strava token validation - currentTime: ${new Date(
         currentTime,
       )}, access token exp. time: ${new Date(stravaAccessTokenExpirationDate)}`,
     );
-    const isTokenExpired = stravaAccessTokenExpirationDate < currentTime;
+    const isTokenExpired =
+      !stravaAccessTokenExpirationDate || stravaAccessTokenExpirationDate < currentTime;
     if (isTokenExpired) {
-      await updateAccessTokens(this.redis, this.stravaConnection, this.logger);
+      await this.updateAccessTokens();
     }
   };
 
