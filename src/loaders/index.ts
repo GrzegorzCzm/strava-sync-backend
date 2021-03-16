@@ -10,7 +10,7 @@ import dependencyInjectorLoader from './dependencyInjector';
 
 export default async ({ expressApp }: { expressApp: Express }): Promise<void> => {
   const dynamoDbConnection = dynamoDb();
-  const redisConnection = redis();
+  const redisConnection = await redis();
   const stravaConnection = await strava();
 
   await dependencyInjectorLoader({

@@ -34,10 +34,13 @@ export default class StravaService {
         refresh_token: refreshToken,
       });
       const { access_token, refresh_token, expires_at } = result.data;
-      const unfiedTokenExpirationDate = new Date(expires_at * 1000);
-      this.logger.info(`Strava access token new exporation date: ` + unfiedTokenExpirationDate);
+      const unfiedTokenExpirationDate = expires_at * 1000;
+      this.logger.info(
+        `Strava access token new exporation date: ` + new Date(unfiedTokenExpirationDate),
+      );
       await this.redis.setAsync('stravaAccessTokenExpirationDate', unfiedTokenExpirationDate);
       await this.redis.setAsync('stravaRefreshToken', refresh_token);
+      await this.redis.setAsync('stravaAccessToken', refresh_token);
       this.stravaConnection.defaults.headers.Authorization = `Bearer ${access_token}`;
       return;
     } catch (error) {

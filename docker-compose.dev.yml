@@ -5,7 +5,8 @@ services:
   strava-sync-dev:
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports: 
       - "8080:8080"
-    env_file:  ./.env
+    volumes: 
+      - ~/<PATH_TO_YOUR_PROJECT_FOLDER>/src:/usr/app/src
