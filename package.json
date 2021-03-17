@@ -1,7 +1,7 @@
 {
   "name": "strava-sync-backend",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.0",
+  "description": "Application for sport rivalistations base on Strava records",
   "main": "app.js",
   "scripts": {
     "test": "mocha --recursive",
@@ -35,6 +35,8 @@
     "readline": "^1.3.0",
     "redis": "^3.0.2",
     "reflect-metadata": "^0.1.13",
+    "swagger-jsdoc": "^6.1.0",
+    "swagger-ui-express": "^4.1.6",
     "typedi": "^0.10.0",
     "winston": "^3.3.3"
   },
