@@ -72,11 +72,22 @@ $ docker exec -it <comntainerID> sh
 ```
 
 
-## Docker compose 
+## Docker compose
+
+### Production
 ```
 $ docker-compose up  // run docker-compose
 $ docker-compose up -d  // run docker-compose in background
 $ docker-compose up --build  // rebuild and run docker-compose
 $ docker-compose down  //stop docker-compose
 $ docker-compose ps  //container created from docker-compose
+```
+
+### Development 
+```
+$ docker-compose -f docker-compose.dev.yml up  // run docker-compose
+$ docker-compose -f docker-compose.dev.yml up -d  // run docker-compose in background
+$ docker-compose -f docker-compose.dev.yml up --build  // rebuild and run docker-compose
+$ docker-compose -f docker-compose.dev.yml down  //stop docker-compose
+$ docker-compose -f docker-compose.dev.yml ps  //container created from docker-compose
 ```

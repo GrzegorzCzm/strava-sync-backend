@@ -59,7 +59,7 @@ export default class ClubController {
 
   async getClubMembers(): Promise<string[]> {
     const stravaRes = await this.stravaServiceInstance.getClubMembers();
-    return this.parseMembers(stravaRes.data as StravaClubMemberData[]);
+    return this.parseMembers(stravaRes as StravaClubMemberData[]);
   }
 
   async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
