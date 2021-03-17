@@ -13,6 +13,8 @@ export default (app: Router): void => {
    * @swagger
    * /club/members:
    *  get:
+   *    tags:
+   *      - name: club
    *    description: Get club members
    *    responses:
    *      200:
@@ -33,12 +35,71 @@ export default (app: Router): void => {
    * @swagger
    * /club/activities:
    *  get:
+   *    tags:
+   *      - name: club
    *    description: Get club activities
    *    parameters:
    *      - name: type
    *        in: query
-   *        description: Activity type
+   *        description: Activity type. E.g. Run, Walk, etc...
    *        type: string
+   *        required: false
+   *        style: form
+   *        schema:
+   *          type: array
+   *          items:
+   *            type: string
+   *        collectionFormat: multi
+   *      - name: athlete
+   *        in: query
+   *        description: Athlete name
+   *        style: form
+   *        schema:
+   *          type: array
+   *          items:
+   *            type: string
+   *        collectionFormat: multi
+   *        required: false
+   *      - name: name
+   *        in: query
+   *        description: Activity name
+   *        type: string
+   *        required: false
+   *        style: form
+   *        schema:
+   *          type: array
+   *          items:
+   *            type: string
+   *        collectionFormat: multi
+   *      - name: dateFrom
+   *        in: query
+   *        description: Activities which was created after this date. E.g 2020-01-01
+   *        type: date
+   *        required: false
+   *      - name: dateTo
+   *        in: query
+   *        description: Activities which was created before or at this date. E.g. 2020-01-01
+   *        type: date
+   *        required: false
+   *      - name: movingFrom
+   *        in: query
+   *        description: Activities which was >= duration given in seconds
+   *        type: number
+   *        required: false
+   *      - name: movingTo
+   *        in: query
+   *        description: Activities which was <=  duration given in seconds
+   *        type: number
+   *        required: false
+   *      - name: distanceFrom
+   *        in: query
+   *        description: Activities which was >= distance given in meters
+   *        type: number
+   *        required: false
+   *      - name: distanceTo
+   *        in: query
+   *        description: Activities which was <=> given in meters
+   *        type: number
    *        required: false
    *    responses:
    *      200:
