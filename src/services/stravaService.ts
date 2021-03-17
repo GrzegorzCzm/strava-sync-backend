@@ -53,11 +53,11 @@ export default class StravaService {
 
     let stravaAccessTokenExpirationDate;
     try {
-      stravaAccessTokenExpirationDate = await this.redis.getAsync(
-        'stravaAccessTokenExpirationDate',
+      stravaAccessTokenExpirationDate = Number(
+        await this.redis.getAsync('stravaAccessTokenExpirationDate'),
       );
     } catch (error) {
-      console.log('Error while getting, exp data', stravaAccessTokenExpirationDate);
+      this.logger.error('Error while getting strava exp data from redis. ' + error?.message);
     }
 
     this.logger.info(
