@@ -40,13 +40,9 @@ import ClubController from '../controllers/clubController';
  *        name:
  *          type: string
  *          description: Activity name
- *        'type':
- *          type: string
- *          description: Activity type
- *          enum: [AlpineSki, BackcountrySki, Canoeing, Crossfit, EBikeRide, Elliptical, Golf, Handcycle, Hike, IceSkate,
- *              InlineSkate, Kayaking, Kitesurf, NordicSki, Ride, RockClimbing, RollerSki, Rowing, Run, Sail, Skateboard,
- *              Snowboard, Snowshoe, Soccer, StairStepper, StandUpPaddling, Surfing, Swim, Velomobile, VirtualRide, VirtualRun,
- *              Walk, WeightTraining, Wheelchair, Windsurf, Workout, Yoga]
+ *        type:
+ *          schema:
+ *            $ref: '#/components/schemas/ActivityType'
  *
  *
  */
