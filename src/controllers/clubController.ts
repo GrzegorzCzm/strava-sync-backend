@@ -50,8 +50,8 @@ const getAthleteIdentifier = (firstName: string, lastName: string) =>
 
 @Service()
 export default class ClubController {
-  stravaServiceInstance;
-  dynamoDbServiceInstance;
+  private stravaServiceInstance;
+  private dynamoDbServiceInstance;
   constructor(@Inject('logger') private logger: Logger) {
     this.stravaServiceInstance = Container.get(StravaService);
     this.dynamoDbServiceInstance = Container.get(DynamoDbService);

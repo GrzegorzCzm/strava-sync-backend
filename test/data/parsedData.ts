@@ -1,4 +1,4 @@
-const singleParsedActivity = {
+export const singleParsedActivity = {
   id: 'id-3119.8-2978',
   name: 'Afternoon Walk',
   athlete: 'Jan_S',
@@ -8,7 +8,7 @@ const singleParsedActivity = {
   date: 1606669133425,
 };
 
-const parsedTestData_1 = [
+export const parsedTestData_1 = [
   {
     id: 'id-3119.8-2978',
     name: 'Afternoon Walk',
@@ -83,7 +83,7 @@ const parsedTestData_1 = [
   },
 ];
 
-const parsedTestData_2 = [
+export const parsedTestData_2 = [
   {
     id: 'id-6230.6-1816',
     name: 'Let’s run',
@@ -121,7 +121,3 @@ const parsedTestData_2 = [
     date: 1606669334297,
   },
 ];
-
-exports.singleParsedActivity = singleParsedActivity;
-exports.parsedTestData_1 = parsedTestData_1;
-exports.parsedTestData_2 = parsedTestData_2;

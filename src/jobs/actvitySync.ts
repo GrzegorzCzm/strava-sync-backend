@@ -5,7 +5,7 @@ import ClubController from '../controllers/clubController';
 
 @Service()
 export default class ActivitySync {
-  clubCotrollerInstance;
+  private clubCotrollerInstance;
   logger: Logger;
   delayInMs;
   constructor(delayInMs: number) {

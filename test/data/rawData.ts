@@ -1,4 +1,4 @@
-const singleRawActivity = {
+export const singleRawActivity = {
   resource_state: 2,
   athlete: { resource_state: 2, firstname: 'Jan', lastname: 'S.' },
   name: 'Afternoon Walk',
@@ -9,7 +9,7 @@ const singleRawActivity = {
   type: 'Walk',
 };
 
-const rawTestData_1 = [
+export const rawTestData_1 = [
   {
     resource_state: 2,
     athlete: { resource_state: 2, firstname: 'Jan', lastname: 'S.' },
@@ -102,7 +102,7 @@ const rawTestData_1 = [
   },
 ];
 
-const rawTestData_2 = [
+export const rawTestData_2 = [
   {
     resource_state: 2,
     athlete: {
@@ -164,7 +164,3 @@ const rawTestData_2 = [
     type: 'VirtualRide',
   },
 ];
-
-exports.singleRawActivity = singleRawActivity;
-exports.rawTestData_1 = rawTestData_1;
-exports.rawTestData_2 = rawTestData_2;
