@@ -1,10 +1,33 @@
+import 'reflect-metadata';
 import { Inject, Container, Service } from 'typedi';
 import chai, { expect } from 'chai';
 import chaiMatchPattern from 'chai-match-pattern';
 import { AxiosInstance } from 'axios';
 
-import { singleRawActivity, rawTestData_1, rawTestData_2 } from '../data/rawData';
+import {
+  stravaSingleRawActivity,
+  stravaRawTestData_1,
+  stravaRawTestData_2,
+} from '../data/stravaRawData';
+import { dynamoDbSingleRawActivity } from '../data/dynamoDbRawData';
 import { singleParsedActivity, parsedTestData_1, parsedTestData_2 } from '../data/parsedData';
+
+import {
+  StravaTokensData,
+  StravaClubMembersData,
+  StravaClubActivitiesData,
+} from '../../src/interfaces/IStrava';
+import { RedisConnection } from '../../src/interfaces/IRedis';
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Models {
+    export type StravaTokens = StravaTokensData;
+    export type StravaClubMembers = StravaClubMembersData;
+    export type StravaClubActivities = StravaClubActivitiesData;
+    export type Redis = RedisConnection;
+  }
+}
 
 import ClubController from '../../src/controllers/clubController';
 import StravaService from '../../src/services/stravaService';
@@ -12,31 +35,38 @@ import StravaService from '../../src/services/stravaService';
 chai.use(chaiMatchPattern);
 
 describe('ClubController', () => {
-  const stravaServiceInsrance = new StravaService(
+  Container.set('logger', { info: data => console.log(data) });
+  Container.set('redis', {
+    getAsync: data => console.log('Redis GET', data),
+    setAsync: (field, data) => console.log('Redis GET', field, data),
+  });
+  Container.set('strava', {
+    get: (data: any) => console.log('GET', data),
+    post: (data: any) => console.log('POST', data),
+  } as AxiosInstance);
+  Container.set('dynamoDb', { scan: async () => ({ Items: [dynamoDbSingleRawActivity] }) });
+
+  const stravaServiceInstance = new StravaService(
     Container.get('logger'),
-    {
-      get: (data: any) => console.log('GET', data),
-      post: (data: any) => console.log('POST', data),
-    } as AxiosInstance,
+    Container.get('strava'),
     Container.get('redis'),
   );
 
   const clubControllerInstance = Container.get(ClubController);
 
-  it('should parse activities', () => {
+  it('should parse activities', async () => {
     const expectedParsedResult = {
       athlete: 'Jan_S',
       date: /^[0-9]{13}$/g,
-      distance: 3119.8,
-      id: 'id-3119.8-2978',
-      movingTime: 2978,
+      distance: 2574.9,
+      id: 'id-2574.9-2431',
+      movingTime: 2431,
       name: 'Afternoon Walk',
       type: 'Walk',
     };
 
-    const parsedActivities = clubControllerInstance.getClubActivities({});
-
-    // expect(parsedActivities[0]).to.matchPattern(expectedParsedResult);
+    const parsedActivities = await clubControllerInstance.getClubActivities({});
+    expect(parsedActivities[0]).to.matchPattern(expectedParsedResult);
   });
 
   // it('should return only newest activities', () => {

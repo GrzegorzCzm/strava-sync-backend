@@ -4,7 +4,7 @@
   "description": "Application for sport rivalistations base on Strava records",
   "main": "app.js",
   "scripts": {
-    "test": "mocha --recursive --extension ts",
+    "test": "mocha -r ts-node/register --recursive --extension ts",
     "lint": "npm run lint:js ",
     "start": "nodemon",
     "lint:eslint": "eslint --ignore-path .gitignore --ext .ts",

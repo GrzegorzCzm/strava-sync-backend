@@ -1,4 +1,4 @@
-export const singleRawActivity = {
+export const stravaSingleRawActivity = {
   resource_state: 2,
   athlete: { resource_state: 2, firstname: 'Jan', lastname: 'S.' },
   name: 'Afternoon Walk',
@@ -9,7 +9,7 @@ export const singleRawActivity = {
   type: 'Walk',
 };
 
-export const rawTestData_1 = [
+export const stravaRawTestData_1 = [
   {
     resource_state: 2,
     athlete: { resource_state: 2, firstname: 'Jan', lastname: 'S.' },
@@ -102,7 +102,7 @@ export const rawTestData_1 = [
   },
 ];
 
-export const rawTestData_2 = [
+export const stravaRawTestData_2 = [
   {
     resource_state: 2,
     athlete: {
