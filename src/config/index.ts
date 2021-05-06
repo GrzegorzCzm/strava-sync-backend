@@ -10,6 +10,6 @@ export default {
     STRAVA_TOKENS_URL: 'https://www.strava.com/oauth/token',
   },
   dynamoDB: {
-    ACTIVITIES_TABLE_NAME: 'stravaTestTwo',
+    ACTIVITIES_TABLE_NAME: process.env.AWD_DYNAMODB_TABLE_NAME,
   },
 };
