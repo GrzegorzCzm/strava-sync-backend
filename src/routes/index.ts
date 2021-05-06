@@ -12,7 +12,7 @@ const options = {
       version: '0.0.0',
     },
   },
-  apis: ['./src/routes/*.ts'],
+  apis: ['./src/routes/*.ts', './routes/*.js'],
 };
 
 export default (): Router => {
