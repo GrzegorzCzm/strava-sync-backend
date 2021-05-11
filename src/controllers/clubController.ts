@@ -152,10 +152,9 @@ export default class ClubController {
       }
     }
 
-    if (parsedQuery.movingTime.data.from && !parsedQuery.movingTime.data.to)
-      parsedQuery.movingTime.data.to = `${Date.now()}`;
-    if (!parsedQuery.movingTime.data.from && parsedQuery.movingTime.data.to)
-      parsedQuery.movingTime.data.from = '0';
+    if (parsedQuery.date.data.from && !parsedQuery.date.data.to)
+      parsedQuery.date.data.to = `${Date.now()}`;
+    if (!parsedQuery.date.data.from && parsedQuery.date.data.to) parsedQuery.date.data.from = '0';
 
     if (
       typeof parsedQuery.movingTime.data.to === 'number' &&
