@@ -12,6 +12,10 @@ export interface ParsedActivityQuery {
   type?: { type: string; data: string[] };
 }
 
+export interface SumByQueryParams {
+  sumKeyField: string;
+  accumulateFields: string[];
+}
 export interface ParsedQuery {
   [fieldName: string]: { type: string; data: Range | string[] | string };
 }
