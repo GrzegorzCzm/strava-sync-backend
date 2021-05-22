@@ -8,6 +8,14 @@ import ClubController from '../controllers/clubController';
  * @swagger
  * components:
  *  schemas:
+ *    AccumulateKey:
+ *      type: string
+ *      enum: [athlete, name, type, date]
+ *    AccumulateFields:
+ *      type: array
+ *      items:
+ *        type: string
+ *        enum: [distance, movingTime]
  *    ActivityType:
  *      type: array
  *      items:
@@ -89,6 +97,22 @@ export default (app: Router): void => {
    *    description: Get club activities
    *    operationId: getClubActivities
    *    parameters:
+   *      - name: sumKeyField
+   *        in: query
+   *        description: Key field for sum. E.g type, athlete, ...
+   *        type: string
+   *        required: false
+   *        schema:
+   *          $ref: '#/components/schemas/AccumulateKey'
+   *      - name: accumulateFields
+   *        in: query
+   *        description: Fields which will be accumulated
+   *        type: string
+   *        required: false
+   *        style: form
+   *        schema:
+   *          $ref: '#/components/schemas/AccumulateFields'
+   *        collectionFormat: multi
    *      - name: type
    *        in: query
    *        description: Activity type. E.g. Run, Walk, etc...
@@ -131,22 +155,22 @@ export default (app: Router): void => {
    *        required: false
    *      - name: movingFrom
    *        in: query
-   *        description: Activities which was >= duration given in seconds
+   *        description: Activities which had >= duration given in seconds
    *        type: number
    *        required: false
    *      - name: movingTo
    *        in: query
-   *        description: Activities which was <=  duration given in seconds
+   *        description: Activities which had <=  duration given in seconds
    *        type: number
    *        required: false
    *      - name: distanceFrom
    *        in: query
-   *        description: Activities which was >= distance given in meters
+   *        description: Activities which had >= distance given in meters
    *        type: number
    *        required: false
    *      - name: distanceTo
    *        in: query
-   *        description: Activities which was <=> given in meters
+   *        description: Activities which had <= distance given in meters
    *        type: number
    *        required: false
    *    responses:

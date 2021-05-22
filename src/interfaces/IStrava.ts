@@ -34,3 +34,7 @@ export interface ProccessedActivity {
   movingTime: number;
   date: number;
 }
+
+export interface SummedActivities {
+  [sumKeyField: string]: { [accumulationField: string]: number };
+}

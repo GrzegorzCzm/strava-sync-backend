@@ -1,11 +1,12 @@
 import { Inject, Container, Service } from 'typedi';
 import { Logger } from 'winston';
 
-import { ParsedActivityQuery } from '../interfaces/IRoutes';
+import { ParsedActivityQuery, SumByQueryParams } from '../interfaces/IRoutes';
 import { DynamoDbClubActivityData } from '../interfaces/IDynamoDb';
 import {
   StravaClubActivityData,
   ProccessedActivity,
+  SummedActivities,
   StravaClubMemberData,
 } from '../interfaces/IStrava';
 import config from '../config';
@@ -62,13 +63,22 @@ export default class ClubController {
     return this.parseMembers(stravaRes as StravaClubMemberData[]);
   }
 
-  async getClubActivities(query: unknown): Promise<ProccessedActivity[]> {
-    const parsedActivitiesQuery = this.parseActivitiesUrlQuery(query);
+  async getClubActivities(query: unknown): Promise<ProccessedActivity[] | SummedActivities> {
+    const { parsedQuery, sumBy } = this.parseActivitiesUrlQuery(query);
     const dynamoDbRes = await this.dynamoDbServiceInstance.getDynamoDbTableScan(
       config.dynamoDB.ACTIVITIES_TABLE_NAME,
-      parsedActivitiesQuery,
+      parsedQuery,
     );
-    return this.parseDynamodDbActivities(dynamoDbRes.Items);
+    const parsedDynamoDbActivities = this.parseDynamodDbActivities(dynamoDbRes.Items);
+    if (sumBy.sumKeyField) {
+      const summed = this.accumulateActivities({
+        activities: parsedDynamoDbActivities,
+        keyField: sumBy.sumKeyField,
+        accumulateFields: sumBy.accumulateFields,
+      });
+      return summed;
+    }
+    return parsedDynamoDbActivities;
   }
 
   async syncActivities(): Promise<void> {
@@ -111,7 +121,9 @@ export default class ClubController {
     }
   }
 
-  private parseActivitiesUrlQuery(query: unknown): ParsedActivityQuery {
+  private parseActivitiesUrlQuery(
+    query: unknown,
+  ): { parsedQuery: ParsedActivityQuery; sumBy: SumByQueryParams } {
     const parsedQuery: ParsedActivityQuery = {
       date: { type: 'N', data: { from: undefined, to: undefined } },
       movingTime: { type: 'N', data: { from: undefined, to: undefined } },
@@ -120,6 +132,12 @@ export default class ClubController {
       name: { type: 'S', data: [] },
       type: { type: 'S', data: [] },
     };
+    const sumBy: SumByQueryParams = {
+      sumKeyField: '',
+      accumulateFields: ['distance', 'movingTime'],
+    };
+
+    console.log('query', query);
 
     for (const [key, val] of Object.entries(query)) {
       switch (key) {
@@ -149,6 +167,12 @@ export default class ClubController {
           break;
         case 'type':
           parsedQuery.type.data = val;
+          break;
+        case 'sumKeyField':
+          sumBy.sumKeyField = val;
+          break;
+        case 'accumulateFields':
+          sumBy.accumulateFields = Array.isArray(val) ? val : [val];
       }
     }
 
@@ -178,7 +202,7 @@ export default class ClubController {
     )
       parsedQuery.distance.data.to = '999999999';
 
-    return parsedQuery;
+    return { parsedQuery, sumBy };
   }
 
   private getTimestamp(value: string): string | undefined {
@@ -226,7 +250,7 @@ export default class ClubController {
     activities,
     keyField,
     accumulateFields,
-  }: AccumulateActivities): { [fieldName: string]: number } {
+  }: AccumulateActivities): SummedActivities {
     const accumulationSet = {};
 
     activities.forEach(activity => {
